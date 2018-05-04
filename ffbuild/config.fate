@@ -1,0 +1,1 @@
+config:c:x86_64:generic:linux:gcc 5.4.0 (Ubuntu 5.4.0-6ubuntu1~16.04.9) 20160609:--enable-libx264 --enable-libxvid --disable-yasm --disable-asm --enable-static --enable-shared --enable-gpl --enable-version3 --enable-nonfree --enable-ffplay --samples=/home/panpan/player/newest_ffmpeg/ffmpeg/test --prefix=/home/panpan/player/newest_ffmpeg/ffmpeg/test

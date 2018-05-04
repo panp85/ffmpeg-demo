@@ -1,0 +1,14 @@
+prefix=/home/panpan/player/newest_ffmpeg/ffmpeg/test
+exec_prefix=${prefix}
+libdir=/home/panpan/player/newest_ffmpeg/ffmpeg/test/lib
+includedir=/home/panpan/player/newest_ffmpeg/ffmpeg/test/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 3.0.101
+Requires: 
+Requires.private: libavutil >= 56.13.100
+Conflicts:
+Libs: -L${libdir}  -lswresample 
+Libs.private: -lm
+Cflags: -I${includedir}
