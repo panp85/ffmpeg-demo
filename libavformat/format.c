@@ -281,12 +281,13 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
             continue;
         pd.buf_size = buf_offset - offset;
         pd.buf = &buf[offset];
-
+       
         memset(pd.buf + pd.buf_size, 0, AVPROBE_PADDING_SIZE);
 
         /* Guess file format. */
         *fmt = av_probe_input_format2(&pd, 1, &score);
         if (*fmt) {
+			av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_buffers, fmt->name = %s.\n", (*fmt)->name);
             /* This can only be true in the last iteration. */
             if (score <= AVPROBE_SCORE_RETRY) {
                 av_log(logctx, AV_LOG_WARNING,

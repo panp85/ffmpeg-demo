@@ -442,10 +442,12 @@ static int init_input(AVFormatContext *s, const char *filename,
 
     if ((ret = s->io_open(s, &s->pb, filename, AVIO_FLAG_READ | s->avio_flags, options)) < 0)
         return ret;
-	av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in init_input, 4.\n");
 
-    if (s->iformat)
+    if (s->iformat){
+		av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in init_input, 4, s->iformat = %s.\n", s->iformat->name);
         return 0;
+    }
+	av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in init_input, 5, go to av_probe_input_buffer2.\n");
     return av_probe_input_buffer2(s->pb, &s->iformat, filename,
                                  s, 0, s->format_probesize);
 }
