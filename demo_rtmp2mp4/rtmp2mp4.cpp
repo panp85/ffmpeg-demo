@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 		        c->codec_id = i_video_stream->codec->codec_id; 
 		        c->codec_type = i_video_stream->codec->codec_type; 
 		        c->time_base.num = i_video_stream->time_base.num; 
-		        c->time_base.den = i_video_stream->time_base.den*16; 
+		        c->time_base.den = i_video_stream->time_base.den; 
 		        fprintf(stderr, "time_base.num = %d time_base.den = %d\n", c->time_base.num, c->time_base.den); 
 		        c->width = i_video_stream->codec->width; 
 		        c->height = i_video_stream->codec->height; 
@@ -125,6 +125,12 @@ int main(int argc, char **argv)
 
 				o_video_stream->time_base.num = c->time_base.num;
 			    o_video_stream->time_base.den = c->time_base.den;
+				if (i_video_stream ->codec->extradata) {
+                       c->extradata = (uint8_t *)av_mallocz(i_video_stream ->codec->extradata_size + AV_INPUT_BUFFER_PADDING_SIZE);
+                       
+                       memcpy(c->extradata, i_video_stream ->codec->extradata, i_video_stream ->codec->extradata_size);
+                       c->extradata_size = i_video_stream ->codec->extradata_size;
+				}
 		    }
         }
 		if(ii == audio_index){
@@ -144,7 +150,7 @@ int main(int argc, char **argv)
 		        c->codec_id = i_audio_stream->codec->codec_id; 
 		        c->codec_type = i_audio_stream->codec->codec_type; 
 		        c->time_base.num = i_audio_stream->time_base.num; 
-		        c->time_base.den = i_audio_stream->time_base.den*48; 
+		        c->time_base.den = i_audio_stream->time_base.den; 
 		        fprintf(stderr, "time_base.num = %d time_base.den = %d\n", c->time_base.num, c->time_base.den); 
 		        
 		        c->pix_fmt = i_audio_stream->codec->pix_fmt; 
@@ -159,6 +165,12 @@ int main(int argc, char **argv)
 		        c->qcompress = i_audio_stream->codec->qcompress; 
 				o_audio_stream->time_base.num = c->time_base.num;
 			    o_audio_stream->time_base.den = c->time_base.den;
+                if (i_audio_stream ->codec->extradata) {
+                    c->extradata = (uint8_t *)av_mallocz(i_audio_stream ->codec->extradata_size + AV_INPUT_BUFFER_PADDING_SIZE);
+                             
+                    memcpy(c->extradata, i_audio_stream ->codec->extradata, i_audio_stream ->codec->extradata_size);
+                    c->extradata_size = i_audio_stream ->codec->extradata_size;
+                }
 		    }
 			
 		}
@@ -185,18 +197,22 @@ int main(int argc, char **argv)
 		{
 		 //   continue;
 		}
+        printf("read: %lld %lld\n", i_pkt.pts, i_pkt.dts); 
+		i_pkt.pts = i_pkt.pts*1000 - i_fmt_ctx->start_time;
+        i_pkt.dts = i_pkt.dts*1000 - i_fmt_ctx->start_time;
+
         /* 
         * pts and dts should increase monotonically 
         * pts should be >= dts 
         */ 
-        i_pkt.flags |= AV_PKT_FLAG_KEY; 
+        //i_pkt.flags |= AV_PKT_FLAG_KEY; 
 		if(i_pkt.stream_index == audio_index){
-        	i_pkt.pts = i_pkt.pts * 48; 
-			i_pkt.dts = i_pkt.dts * 48; 
+        	i_pkt.pts = i_pkt.pts * 48/ 1000; 
+			i_pkt.dts = i_pkt.dts * 48/ 1000; 
     	}
 		else if(i_pkt.stream_index == video_index){
-        	i_pkt.pts = i_pkt.pts * 16; 
-			i_pkt.dts = i_pkt.dts * 16; 
+        	i_pkt.pts = i_pkt.pts * 16/1000; 
+			i_pkt.dts = i_pkt.dts * 16/1000; 
     	}
     	
 		pts = i_pkt.pts;
@@ -208,6 +224,7 @@ int main(int argc, char **argv)
         //printf("%lld %lld\n", i_pkt.pts, i_pkt.dts); 
         static int num = 1; 
         printf("frame %d\n", num++); 
+		printf("write: %lld %lld\n", i_pkt.pts, i_pkt.dts); 
         av_interleaved_write_frame(o_fmt_ctx, &i_pkt); 
 		if(num >= total_nul){
 		    break;
