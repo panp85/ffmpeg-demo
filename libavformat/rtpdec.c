@@ -343,11 +343,12 @@ int ff_rtp_check_and_send_back_rr(RTPDemuxContext *s, URLContext *fd,
     expected              = extended_max - stats->base_seq;
     lost                  = expected - stats->received;
     lost                  = FFMIN(lost, 0xffffff); // clamp it since it's only 24 bits...
-    expected_interval     = expected - stats->expected_prior;
-    stats->expected_prior = expected;
-    received_interval     = stats->received - stats->received_prior;
-    stats->received_prior = stats->received;
-    lost_interval         = expected_interval - received_interval;
+    expected_interval     = expected - stats->expected_prior;//expected:接收到的最大的包序号，stats->expected_prior:上次接收到的最大的序号
+    //相减，统计时最大序号的偏差
+    stats->expected_prior = expected;//上次统计时接收到的最大的包序号（减去了base_seq）
+    received_interval     = stats->received - stats->received_prior;//已经接收到的包数 减 上次统计时接收到的包数量
+    stats->received_prior = stats->received;//上次统计时接收到的包数量
+    lost_interval         = expected_interval - received_interval;//上次接收到这次接收，中间有多少个包没收到
     if (expected_interval == 0 || lost_interval <= 0)
         fraction = 0;
     else
@@ -794,8 +795,10 @@ static int rtp_parse_one_packet(RTPDemuxContext *s, AVPacket *pkt,
         /* If parsing of the previous packet actually returned 0 or an error,
          * there's nothing more to be parsed from that packet, but we may have
          * indicated that we can return the next enqueued packet. */
-        if (s->prev_ret <= 0)
+        if (s->prev_ret <= 0){
+			av_log(NULL, AV_LOG_INFO, "ppt, in rtp_parse_one_packet, go to rtp_parse_queued_packet.\n");
             return rtp_parse_queued_packet(s, pkt);
+        }
         /* return the next packets, if any */
         if (s->handler && s->handler->parse_packet) {
             /* timestamp should be overwritten by parse_packet, if not,

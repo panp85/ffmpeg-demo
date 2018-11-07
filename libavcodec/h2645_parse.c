@@ -371,17 +371,19 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
             bytestream2_peek_be32(&bc) == 0x000001E0)
             skip_trailing_zeros = 0;
 		av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split, 1 nal->data:\n");
-		for(i = 0; i < nal->size; i++)
+		/*for(i = 0; i < nal->size; i++)
 		{
 			av_log(NULL, AV_LOG_INFO, "%02x", nal->data[i]);
-		}
+		}*/
 		av_log(NULL, AV_LOG_INFO, "\n");
         nal->size_bits = get_bit_length(nal, skip_trailing_zeros);
 		av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split, 2 nal->data:\n");
+		/*
 		for(i = 0; i < nal->size_bits; i++)
 		{
 			av_log(NULL, AV_LOG_INFO,"%02x",  nal->data[i]);
 		}
+		*/
 		av_log(NULL, AV_LOG_INFO, "\n");
         ret = init_get_bits(&nal->gb, nal->data, nal->size_bits);
         if (ret < 0)

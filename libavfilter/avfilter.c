@@ -1052,7 +1052,8 @@ static int ff_filter_frame_framed(AVFilterLink *link, AVFrame *frame)
     AVFilterContext *dstctx = link->dst;
     AVFilterPad *dst = link->dstpad;
     int ret;
-
+    av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_filter_frame_framed, dstctx: %s.\n", 
+		dstctx->name);
     if (!(filter_frame = dst->filter_frame))
         filter_frame = default_filter_frame;
 
@@ -1114,6 +1115,7 @@ int ff_filter_frame(AVFilterLink *link, AVFrame *frame)
 
     link->frame_blocked_in = link->frame_wanted_out = 0;
     link->frame_count_in++;
+	av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_filter_frame, link->dst: %s.\n", link->dst->name);
     filter_unblock(link->dst);
     ret = ff_framequeue_add(&link->fifo, frame);
     if (ret < 0) {
@@ -1200,7 +1202,7 @@ static int ff_filter_frame_to_filter(AVFilterLink *link)
     AVFrame *frame = NULL;
     AVFilterContext *dst = link->dst;
     int ret;
-
+    av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_filter_frame_to_filter, dst: %s.\n", dst->name);
     av_assert1(ff_framequeue_queued_frames(&link->fifo));
     ret = link->min_samples ?
           ff_inlink_consume_samples(link, link->min_samples, link->max_samples, &frame) :
@@ -1262,21 +1264,27 @@ static int forward_status_change(AVFilterContext *filter, AVFilterLink *in)
 static int ff_filter_activate_default(AVFilterContext *filter)
 {
     unsigned i;
-
+    av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_filter_activate_default, go in, filter: %s.\n", filter->name);
     for (i = 0; i < filter->nb_inputs; i++) {
         if (samples_ready(filter->inputs[i], filter->inputs[i]->min_samples)) {
+			av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_filter_activate_default, go to ff_filter_frame_to_filter.\n");
             return ff_filter_frame_to_filter(filter->inputs[i]);
         }
     }
+	
     for (i = 0; i < filter->nb_inputs; i++) {
         if (filter->inputs[i]->status_in && !filter->inputs[i]->status_out) {
             av_assert1(!ff_framequeue_queued_frames(&filter->inputs[i]->fifo));
+			av_log(NULL, AV_LOG_INFO, 
+			   "filter ppt, in ff_filter_activate_default, go to forward_status_change.\n");
             return forward_status_change(filter, filter->inputs[i]);
         }
     }
+	
     for (i = 0; i < filter->nb_outputs; i++) {
         if (filter->outputs[i]->frame_wanted_out &&
             !filter->outputs[i]->frame_blocked_in) {
+            av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_filter_activate_default, go to ff_request_frame_to_filter.\n");
             return ff_request_frame_to_filter(filter->outputs[i]);
         }
     }
@@ -1471,16 +1479,20 @@ static void consume_update(AVFilterLink *link, const AVFrame *frame)
 int ff_inlink_consume_frame(AVFilterLink *link, AVFrame **rframe)
 {
     AVFrame *frame;
+	//av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_inlink_consume_frame, go in.\n");
 
     *rframe = NULL;
     if (!ff_inlink_check_available_frame(link))
+    {
+        av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_inlink_consume_frame, ff_inlink_check_available_frame failed.\n");
         return 0;
-
+    }
     if (link->fifo.samples_skipped) {
+		av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_inlink_consume_frame, samples_skipped yes.\n");
         frame = ff_framequeue_peek(&link->fifo, 0);
         return ff_inlink_consume_samples(link, frame->nb_samples, frame->nb_samples, rframe);
     }
-
+	av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_inlink_consume_frame, go to ff_framequeue_take.\n");
     frame = ff_framequeue_take(&link->fifo);
     consume_update(link, frame);
     *rframe = frame;
@@ -1492,7 +1504,7 @@ int ff_inlink_consume_samples(AVFilterLink *link, unsigned min, unsigned max,
 {
     AVFrame *frame;
     int ret;
-
+    av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_inlink_consume_samples, go in.\n");
     av_assert1(min);
     *rframe = NULL;
     if (!ff_inlink_check_available_samples(link, min))
@@ -1561,8 +1573,8 @@ int ff_inlink_process_commands(AVFilterLink *link, const AVFrame *frame)
     AVFilterCommand *cmd = link->dst->command_queue;
 
     while(cmd && cmd->time <= frame->pts * av_q2d(link->time_base)){
-        av_log(link->dst, AV_LOG_DEBUG,
-               "Processing command time:%f command:%s arg:%s\n",
+        av_log(link->dst, AV_LOG_INFO,
+               "filter, ppt, in ff_inlink_process_commands, Processing command time:%f command:%s arg:%s\n",
                cmd->time, cmd->command, cmd->arg);
         avfilter_process_command(link->dst, cmd->command, cmd->arg, 0, 0, cmd->flags);
         ff_command_queue_pop(link->dst);
@@ -1594,6 +1606,8 @@ void ff_inlink_request_frame(AVFilterLink *link)
     av_assert1(!link->status_in);
     av_assert1(!link->status_out);
     link->frame_wanted_out = 1;
+	av_log(NULL, AV_LOG_INFO, "filter ppt, in ff_inlink_request_frame, link->src: %s, go to ff_filter_set_ready.\n", 
+		link->src->name);
     ff_filter_set_ready(link->src, 100);
 }
 

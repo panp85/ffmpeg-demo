@@ -161,7 +161,9 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened,
         if (!is_opened == !(fmt1->flags & AVFMT_NOFILE) && strcmp(fmt1->name, "image2"))
             continue;
         score = 0;
+		av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_format3, fmt1->name: %s.\n", fmt1->name);
         if (fmt1->read_probe) {
+			av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_format3, go to fmt1->read_probe.\n");
             score = fmt1->read_probe(&lpd);
             if (score)
                 av_log(NULL, AV_LOG_TRACE, "Probing %s score:%d size:%d\n", fmt1->name, score, lpd.buf_size);
@@ -180,10 +182,12 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened,
                 }
             }
         } else if (fmt1->extensions) {
+			av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_format3, go to av_match_ext.\n");
             if (av_match_ext(lpd.filename, fmt1->extensions))
                 score = AVPROBE_SCORE_EXTENSION;
         }
         if (av_match_name(lpd.mime_type, fmt1->mime_type)) {
+			av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_format3, fmt1->mime_type: %s.\n", fmt1->mime_type);
             if (AVPROBE_SCORE_MIME > score) {
                 av_log(NULL, AV_LOG_DEBUG, "Probing %s score:%d increased to %d due to MIME type\n", fmt1->name, score, AVPROBE_SCORE_MIME);
                 score = AVPROBE_SCORE_MIME;
@@ -198,7 +202,10 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened,
     if (nodat == ID3_GREATER_PROBE)
         score_max = FFMIN(AVPROBE_SCORE_EXTENSION / 2 - 1, score_max);
     *score_ret = score_max;
-
+    if(fmt)
+    {
+        av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_format3, fmt: %s.\n", fmt->name);
+    }
     return fmt;
 }
 
@@ -287,7 +294,8 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt,
         /* Guess file format. */
         *fmt = av_probe_input_format2(&pd, 1, &score);
         if (*fmt) {
-			av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_buffers, fmt->name = %s.\n", (*fmt)->name);
+			av_log(NULL, AV_LOG_INFO, "ffmpeg ppt, in av_probe_input_buffers, fmt->name = %s, score = %d.\n", 
+				(*fmt)->name, score);
             /* This can only be true in the last iteration. */
             if (score <= AVPROBE_SCORE_RETRY) {
                 av_log(logctx, AV_LOG_WARNING,

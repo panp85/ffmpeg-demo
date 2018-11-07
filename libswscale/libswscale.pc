@@ -1,7 +1,7 @@
-prefix=/home/panpan/player/newest_ffmpeg/ffmpeg/test
+prefix=/home/panpan/player/newest_ffmpeg/ffmpeg/test/
 exec_prefix=${prefix}
-libdir=/home/panpan/player/newest_ffmpeg/ffmpeg/test/lib
-includedir=/home/panpan/player/newest_ffmpeg/ffmpeg/test/include
+libdir=/home/panpan/player/newest_ffmpeg/ffmpeg/test//lib
+includedir=/home/panpan/player/newest_ffmpeg/ffmpeg/test//include
 
 Name: libswscale
 Description: FFmpeg image rescaling library

@@ -293,6 +293,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
     for (i = 0; i < s->nb_streams; i++) {
         st  = s->streams[i];
         par = st->codecpar;
+        //av_log(NULL, AV_LOG_ERROR, "ppt, in init_muxer, 1 st->time_base.num = %d.\n", st->time_base.num);
 
 #if FF_API_LAVF_AVCTX
 FF_DISABLE_DEPRECATION_WARNINGS
@@ -307,7 +308,7 @@ FF_DISABLE_DEPRECATION_WARNINGS
         }
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in init_muxer, 2 st->time_base.num = %d.\n", st->time_base.num);
         if (!st->time_base.num) {
             /* fall back on the default timebase values */
             if (par->codec_type == AVMEDIA_TYPE_AUDIO && par->sample_rate)
@@ -512,27 +513,39 @@ int avformat_write_header(AVFormatContext *s, AVDictionary **options)
     int already_initialized = s->internal->initialized;
     int streams_already_initialized = s->internal->streams_initialized;
 
-    if (!already_initialized)
+    if (!already_initialized){
+		av_log(NULL, AV_LOG_ERROR, "ppt, in avformat_write_header, s->internal->streams_initialized no 1.\n");
         if ((ret = avformat_init_output(s, options)) < 0)
             return ret;
+    }
+	else{
+		av_log(NULL, AV_LOG_ERROR, "ppt, in avformat_write_header, s->internal->streams_initialized yes 2.\n");
+	}
 
-    if (!(s->oformat->flags & AVFMT_NOFILE) && s->pb)
+    if (!(s->oformat->flags & AVFMT_NOFILE) && s->pb){
         avio_write_marker(s->pb, AV_NOPTS_VALUE, AVIO_DATA_MARKER_HEADER);
+	}
     if (s->oformat->write_header) {
         ret = s->oformat->write_header(s);
         if (ret >= 0 && s->pb && s->pb->error < 0)
             ret = s->pb->error;
-        if (ret < 0)
+        if (ret < 0){
+			av_log(NULL, AV_LOG_ERROR, "ppt, in avformat_write_header, s->internal->streams_initialized yes 2.\n");
             goto fail;
+        }
         flush_if_needed(s);
     }
     if (!(s->oformat->flags & AVFMT_NOFILE) && s->pb)
         avio_write_marker(s->pb, AV_NOPTS_VALUE, AVIO_DATA_MARKER_UNKNOWN);
 
     if (!s->internal->streams_initialized) {
+		av_log(NULL, AV_LOG_ERROR, "ppt, in avformat_write_header, s->internal->streams_initialized no 1.\n");
         if ((ret = init_pts(s)) < 0)
             goto fail;
     }
+	else{
+		av_log(NULL, AV_LOG_ERROR, "ppt, in avformat_write_header, s->internal->streams_initialized yes 2.\n");
+	}
 
     return streams_already_initialized;
 
@@ -591,6 +604,7 @@ static int compute_muxer_pkt_fields(AVFormatContext *s, AVStream *st, AVPacket *
             pkt->duration = av_rescale(1, num * (int64_t)st->time_base.den * st->codec->ticks_per_frame, den * (int64_t)st->time_base.num);
         }
     }
+	//av_log(NULL, AV_LOG_ERROR, "ppt, in compute_muxer_pkt_fields, 1.\n");
 
     if (pkt->pts == AV_NOPTS_VALUE && pkt->dts != AV_NOPTS_VALUE && delay == 0)
         pkt->pts = pkt->dts;
@@ -606,6 +620,7 @@ static int compute_muxer_pkt_fields(AVFormatContext *s, AVStream *st, AVPacket *
 //        pkt->pts= st->cur_dts;
             pkt->pts = st->internal->priv_pts->val;
     }
+	//av_log(NULL, AV_LOG_ERROR, "ppt, in compute_muxer_pkt_fields, 2.\n");
 
     //calculate dts from pts
     if (pkt->pts != AV_NOPTS_VALUE && pkt->dts == AV_NOPTS_VALUE && delay <= MAX_REORDER_DELAY) {
@@ -617,6 +632,7 @@ static int compute_muxer_pkt_fields(AVFormatContext *s, AVStream *st, AVPacket *
 
         pkt->dts = st->pts_buffer[0];
     }
+	//av_log(NULL, AV_LOG_ERROR, "ppt, in compute_muxer_pkt_fields, 2.5.\n");
 
     if (st->cur_dts && st->cur_dts != AV_NOPTS_VALUE &&
         ((!(s->oformat->flags & AVFMT_TS_NONSTRICT) &&
@@ -628,6 +644,7 @@ static int compute_muxer_pkt_fields(AVFormatContext *s, AVStream *st, AVPacket *
                st->index, av_ts2str(st->cur_dts), av_ts2str(pkt->dts));
         return AVERROR(EINVAL);
     }
+	//av_log(NULL, AV_LOG_ERROR, "ppt, in compute_muxer_pkt_fields, 2.6.\n");
     if (pkt->dts != AV_NOPTS_VALUE && pkt->pts != AV_NOPTS_VALUE && pkt->pts < pkt->dts) {
         av_log(s, AV_LOG_ERROR,
                "pts (%s) < dts (%s) in stream %d\n",
@@ -635,14 +652,17 @@ static int compute_muxer_pkt_fields(AVFormatContext *s, AVStream *st, AVPacket *
                st->index);
         return AVERROR(EINVAL);
     }
+	//av_log(NULL, AV_LOG_ERROR, "ppt, in compute_muxer_pkt_fields, 2.7.\n");
 
     if (s->debug & FF_FDEBUG_TS)
         av_log(s, AV_LOG_TRACE, "av_write_frame: pts2:%s dts2:%s\n",
             av_ts2str(pkt->pts), av_ts2str(pkt->dts));
 
     st->cur_dts = pkt->dts;
+	//if(st->internal && st->internal->priv_pts){
     st->internal->priv_pts->val = pkt->dts;
-
+	//	}
+    //av_log(NULL, AV_LOG_ERROR, "ppt, in compute_muxer_pkt_fields, 3.\n");
     /* update pts */
     switch (st->codecpar->codec_type) {
     case AVMEDIA_TYPE_AUDIO:
@@ -1189,6 +1209,7 @@ static int interleave_packet(AVFormatContext *s, AVPacket *out, AVPacket *in, in
 int av_interleaved_write_frame(AVFormatContext *s, AVPacket *pkt)
 {
     int ret, flush = 0;
+	//av_log(NULL, AV_LOG_ERROR, "ppt, in av_interleaved_write_frame, 1.\n");
 
     ret = prepare_input_packet(s, pkt);
     if (ret < 0)
@@ -1202,6 +1223,7 @@ int av_interleaved_write_frame(AVFormatContext *s, AVPacket *pkt)
             return 0;
         else if (ret < 0)
             goto fail;
+		//av_log(NULL, AV_LOG_ERROR, "ppt, in av_interleaved_write_frame, 2.\n");
 
         if (s->debug & FF_FDEBUG_TS)
             av_log(s, AV_LOG_TRACE, "av_interleaved_write_frame size:%d dts:%s pts:%s\n",
@@ -1211,6 +1233,7 @@ int av_interleaved_write_frame(AVFormatContext *s, AVPacket *pkt)
         if ((ret = compute_muxer_pkt_fields(s, st, pkt)) < 0 && !(s->oformat->flags & AVFMT_NOTIMESTAMPS))
             goto fail;
 #endif
+		//av_log(NULL, AV_LOG_ERROR, "ppt, in av_interleaved_write_frame, 2.5.\n");
 
         if (pkt->dts == AV_NOPTS_VALUE && !(s->oformat->flags & AVFMT_NOTIMESTAMPS)) {
             ret = AVERROR(EINVAL);
@@ -1220,7 +1243,7 @@ int av_interleaved_write_frame(AVFormatContext *s, AVPacket *pkt)
         av_log(s, AV_LOG_TRACE, "av_interleaved_write_frame FLUSH\n");
         flush = 1;
     }
-
+    //av_log(NULL, AV_LOG_ERROR, "ppt, in av_interleaved_write_frame, 3.\n");
     for (;; ) {
         AVPacket opkt;
         int ret = interleave_packet(s, &opkt, pkt, flush);

@@ -122,7 +122,7 @@ AVCodecParserContext *av_parser_init(int codec_id)
     const AVCodecParser *parser;
     void *i = 0;
     int ret;
-
+    av_log(NULL, AV_LOG_ERROR, "ppt, in av_parser_init, codec_id = %d.\n", codec_id);
     if (codec_id == AV_CODEC_ID_NONE)
         return NULL;
 
@@ -231,6 +231,8 @@ int av_parser_parse2(AVCodecParserContext *s, AVCodecContext *avctx,
         buf = dummy_buf;
     } else if (s->cur_offset + buf_size != s->cur_frame_end[s->cur_frame_start_index]) { /* skip remainder packets */
         /* add a new packet descriptor */
+	    av_log(NULL, AV_LOG_INFO, 
+	    	"parser ppt, in av_parser_parse2, go to s->cur_offset + buf_size != s->cur_frame_end[s->cur_frame_start_index]");
         i = (s->cur_frame_start_index + 1) & (AV_PARSER_PTS_NB - 1);
         s->cur_frame_start_index = i;
         s->cur_frame_offset[i]   = s->cur_offset;
@@ -241,12 +243,15 @@ int av_parser_parse2(AVCodecParserContext *s, AVCodecContext *avctx,
     }
 
     if (s->fetch_timestamp) {
+		av_log(NULL, AV_LOG_INFO, 
+	    	"parser ppt, in av_parser_parse2, go to s->fetch_timestamp yes.\n");
         s->fetch_timestamp = 0;
         s->last_pts        = s->pts;
         s->last_dts        = s->dts;
         s->last_pos        = s->pos;
         ff_fetch_timestamp(s, 0, 0, 0);
     }
+	
     /* WARNING: the returned index can be negative */
     index = s->parser->parser_parse(s, avctx, (const uint8_t **) poutbuf,
                                     poutbuf_size, buf, buf_size);
@@ -325,7 +330,7 @@ int ff_combine_frame(ParseContext *pc, int next,
         ff_dlog(NULL, "%X %X %X %X\n",
                 (*buf)[0], (*buf)[1], (*buf)[2], (*buf)[3]);
     }
-
+    av_log(NULL, AV_LOG_INFO, "parser ppt, in ff_combine_frame, pc->overread = %d, pc->index = %d.\n", pc->overread, pc->index);
     /* Copy overread bytes from last frame into buffer. */
     for (; pc->overread > 0; pc->overread--)
         pc->buffer[pc->index++] = pc->buffer[pc->overread_index++];
@@ -376,6 +381,7 @@ int ff_combine_frame(ParseContext *pc, int next,
         pc->index = 0;
         *buf      = pc->buffer;
     }
+	av_log(NULL, AV_LOG_INFO, "parser ppt, in ff_combine_frame, next = %d.\n", next);
 
     /* store overread bytes */
     for (; next < 0; next++) {

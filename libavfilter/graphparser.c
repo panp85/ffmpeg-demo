@@ -188,7 +188,7 @@ static int parse_filter(AVFilterContext **filt_ctx, const char **buf, AVFilterGr
         (*buf)++;
         opts = av_get_token(buf, "[],;");
     }
-
+    av_log(NULL, AV_LOG_INFO, "filter ppt, in parse_filter, name = %s.\n", name);
     ret = create_filter(filt_ctx, graph, index, name, opts, log_ctx);
     av_free(name);
     av_free(opts);
@@ -553,7 +553,7 @@ int avfilter_graph_parse_ptr(AVFilterGraph *graph, const char *filters,
         AVFilterContext *filter;
         const char *filterchain = filters;
         filters += strspn(filters, WHITESPACES);
-
+        av_log(NULL, AV_LOG_INFO, "filter ppt, in avfilter_graph_parse_ptr, in do.\n");
         if ((ret = parse_inputs(&filters, &curr_inputs, &open_outputs, log_ctx)) < 0)
             goto end;
 

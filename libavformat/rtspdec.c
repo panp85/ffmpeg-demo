@@ -620,7 +620,7 @@ int ff_rtsp_setup_input_streams(AVFormatContext *s, RTSPMessageHeader *reply)
     if (!content)
         return AVERROR_INVALIDDATA;
 
-    av_log(s, AV_LOG_VERBOSE, "SDP:\n%s\n", content);
+    //av_log(s, AV_LOG_ERROR, "ppt, in ff_rtsp_setup_input_streams, SDP:\n%s\n", content);
     /* now we got the SDP description, we parse it */
     ret = ff_sdp_parse(s, (const char *)content);
     av_freep(&content);

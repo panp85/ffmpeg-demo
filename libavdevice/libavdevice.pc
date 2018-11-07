@@ -1,7 +1,7 @@
-prefix=/home/panpan/player/newest_ffmpeg/ffmpeg/test
+prefix=/home/panpan/player/newest_ffmpeg/ffmpeg/test/
 exec_prefix=${prefix}
-libdir=/home/panpan/player/newest_ffmpeg/ffmpeg/test/lib
-includedir=/home/panpan/player/newest_ffmpeg/ffmpeg/test/include
+libdir=/home/panpan/player/newest_ffmpeg/ffmpeg/test//lib
+includedir=/home/panpan/player/newest_ffmpeg/ffmpeg/test//include
 
 Name: libavdevice
 Description: FFmpeg device handling library
@@ -10,5 +10,5 @@ Requires:
 Requires.private: libavfilter >= 7.14.100, libswscale >= 5.0.102, libpostproc >= 55.0.100, libavformat >= 58.11.101, libavcodec >= 58.17.100, libswresample >= 3.0.101, libavutil >= 56.13.100
 Conflicts:
 Libs: -L${libdir}  -lavdevice 
-Libs.private: -lm -lxcb -lxcb-shape -lxcb -lxcb-xfixes -lxcb-render -lxcb-shape -lxcb
+Libs.private: -lm -lxcb -lxcb-shm -lxcb -lxcb-shape -lxcb -lxcb-xfixes -lxcb-render -lxcb-shape -lxcb -lasound
 Cflags: -I${includedir}

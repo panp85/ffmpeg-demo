@@ -173,8 +173,9 @@ static int sdp_parse_fmtp_config_h264(AVFormatContext *s,
             av_log(s, AV_LOG_ERROR,
                    "Interleaved RTP mode is not supported yet.\n");
     } else if (!strcmp(attr, "profile-level-id")) {
-        if (strlen(value) == 6)
+        if (strlen(value) == 6){
             parse_profile_level_id(s, h264_data, value);
+        }
     } else if (!strcmp(attr, "sprop-parameter-sets")) {
         int ret;
         if (*value == 0 || value[strlen(value) - 1] == ',') {

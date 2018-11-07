@@ -1590,10 +1590,15 @@ static void m4sl_cb(MpegTSFilter *filter, const uint8_t *section,
             ff_mp4_read_dec_config_descr(s, st, &pb);
             if (st->codecpar->codec_id == AV_CODEC_ID_AAC &&
                 st->codecpar->extradata_size > 0)
+            {
+                av_log(NULL, AV_LOG_INFO, "mpegts ppt, in m4sl_cb, set need_parsing to 0.\n");
                 st->need_parsing = 0;
+            }
             if (st->codecpar->codec_id == AV_CODEC_ID_H264 &&
                 st->codecpar->extradata_size > 0)
+            {
                 st->need_parsing = 0;
+            }
 
             st->codecpar->codec_type = avcodec_get_type(st->codecpar->codec_id);
             st->internal->need_context_update = 1;
@@ -1687,6 +1692,7 @@ int ff_parse_mpeg2_descriptor(AVFormatContext *fc, AVStream *st, int stream_type
                 ff_mp4_read_dec_config_descr(fc, st, &pb);
                 if (st->codecpar->codec_id == AV_CODEC_ID_AAC &&
                     st->codecpar->extradata_size > 0) {
+                    av_log(NULL, AV_LOG_INFO, "mpegts ppt, in ff_parse_mpeg2_descriptor, 1 set need_parsing to 0.\n");
                     st->need_parsing = 0;
                     st->internal->need_context_update = 1;
                 }
@@ -1709,6 +1715,7 @@ int ff_parse_mpeg2_descriptor(AVFormatContext *fc, AVStream *st, int stream_type
             ff_mp4_read_dec_config_descr(fc, st, &pb);
             if (st->codecpar->codec_id == AV_CODEC_ID_AAC &&
                 st->codecpar->extradata_size > 0) {
+                av_log(NULL, AV_LOG_INFO, "mpegts ppt, in ff_parse_mpeg2_descriptor, 2 set need_parsing to 0.\n");
                 st->request_probe = st->need_parsing = 0;
                 st->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
                 st->internal->need_context_update = 1;

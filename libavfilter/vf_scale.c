@@ -408,7 +408,8 @@ static int filter_frame(AVFilterLink *link, AVFrame *in)
     const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(link->format);
     char buf[32];
     int in_range;
-
+    av_log(NULL, AV_LOG_INFO, "filter ppt, in filter_frame vf_scale, link->dst: %s.\n",
+		link->dst->name);
     if (in->colorspace == AVCOL_SPC_YCGCO)
         av_log(link->dst, AV_LOG_WARNING, "Detected unsupported YCgCo colorspace.\n");
 

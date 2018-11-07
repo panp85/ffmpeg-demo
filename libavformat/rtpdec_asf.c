@@ -157,7 +157,7 @@ static int asfrtp_parse_sdp_line(AVFormatContext *s, int stream_index,
         return 0;
     if (av_strstart(line, "stream:", &line)) {
         RTSPState *rt = s->priv_data;
-
+        av_log(NULL, AV_LOG_INFO, "rtpdec_asf ppt, in asfrtp_parse_sdp_line, av_strstart stream.\n");
         s->streams[stream_index]->id = strtol(line, NULL, 10);
 
         if (rt->asf_ctx) {

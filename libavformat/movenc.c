@@ -3158,6 +3158,8 @@ static int mov_write_mvhd_tag(AVIOContext *pb, MOVMuxContext *mov)
 
     for (i = 0; i < mov->nb_streams; i++) {
         if (mov->tracks[i].entry > 0 && mov->tracks[i].timescale) {
+			av_log(NULL, AV_LOG_ERROR, "ppt, in mov_write_mvhd_tag, track_duration,timescale = %llu, %u.\n", 
+				mov->tracks[i].track_duration, mov->tracks[i].timescale);
             int64_t max_track_len_temp = av_rescale_rnd(mov->tracks[i].track_duration,
                                                 MOV_TIMESCALE,
                                                 mov->tracks[i].timescale,
@@ -3168,6 +3170,7 @@ static int mov_write_mvhd_tag(AVIOContext *pb, MOVMuxContext *mov)
                 max_track_id = mov->tracks[i].track_id;
         }
     }
+	av_log(NULL, AV_LOG_ERROR, "ppt, in mov_write_mvhd_tag, max_track_len = %llu.\n", max_track_len);
     /* If using delay_moov, make sure the output is the same as if no
      * samples had been written yet. */
     if (mov->flags & FF_MOV_FLAG_EMPTY_MOOV) {
@@ -3754,6 +3757,8 @@ static void build_chunks(MOVTrack *trk)
 	av_log(NULL, AV_LOG_INFO, "mov ppt, in build_chunks, trk->entry = %d.\n", 
 				trk->entry);
     for (i = 1; i<trk->entry; i++){
+		av_log(NULL, AV_LOG_INFO, "mov ppt, in build_chunks, chunk->pos, chunkSize, trk->cluster[i].pos = %llu, %llu, %llu.\n", 
+				chunk->pos, chunkSize, trk->cluster[i].pos);
         if (chunk->pos + chunkSize == trk->cluster[i].pos &&
             chunkSize + trk->cluster[i].size < (1<<20)){
             chunkSize             += trk->cluster[i].size;
@@ -3848,7 +3853,7 @@ static int mov_write_moov_tag(AVIOContext *pb, MOVMuxContext *mov,
         }
     for (i = 0; i < mov->nb_streams; i++) {
         MOVTrack *track = &mov->tracks[i];
-		av_log(NULL, AV_LOG_INFO, "mov ppt, in mov_write_moov_tag, %d,track->tag = %d.\n",
+		av_log(NULL, AV_LOG_INFO, "mov ppt, in mov_write_moov_tag, %x,track->tag = %x.\n",
 	        i, track->tag);
         if (track->tag == MKTAG('r','t','p',' ')) {
             track->tref_tag = MKTAG('h','i','n','t');
@@ -3884,6 +3889,8 @@ static int mov_write_moov_tag(AVIOContext *pb, MOVMuxContext *mov,
         mov_write_iods_tag(pb, mov);
     for (i = 0; i < mov->nb_streams; i++) {
         if (mov->tracks[i].entry > 0 || mov->flags & FF_MOV_FLAG_FRAGMENT) {
+			av_log(NULL, AV_LOG_ERROR, "ppt, in mov_write_moov_tag, go to mov_write_trak_tag, mov->tracks[%d].entry: %d.\n", 
+				i, mov->tracks[i].entry);
             int ret = mov_write_trak_tag(s, pb, mov, &(mov->tracks[i]), i < s->nb_streams ? s->streams[i] : NULL);
             if (ret < 0)
                 return ret;
@@ -5332,7 +5339,11 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
                    "this case.\n",
                    pkt->stream_index, pkt->dts);
     }
+	
     trk->track_duration = pkt->dts - trk->start_dts + pkt->duration;
+	av_log(NULL, AV_LOG_ERROR, 
+		"ppt, in ff_mov_write_packet, trk->track_duration: %llu, pkt->dts: %llu, trk->start_dts: %llu, pkt->duration: %llu.\n", 
+		trk->track_duration, pkt->dts, trk->start_dts, pkt->duration);
     trk->last_sample_is_subtitle_end = 0;
 
     if (pkt->pts == AV_NOPTS_VALUE) {
@@ -6064,10 +6075,14 @@ static int mov_init(AVFormatContext *s)
             }
             if (mov->video_track_timescale) {
                 track->timescale = mov->video_track_timescale;
+				av_log(NULL, AV_LOG_ERROR, "ppt, in mov_init, mov->video_track_timescale = %d.\n", mov->video_track_timescale);
             } else {
                 track->timescale = st->time_base.den;
-                while(track->timescale < 10000)
+				av_log(NULL, AV_LOG_ERROR, "ppt, in mov_init, video,1 track->timescale = %u.\n", track->timescale);
+                while(track->timescale < 10000){
                     track->timescale *= 2;
+					av_log(NULL, AV_LOG_ERROR, "ppt, in mov_init, video,1 track->timescale = %u.\n", track->timescale);
+                }
             }
             if (st->codecpar->width > 65535 || st->codecpar->height > 65535) {
                 av_log(s, AV_LOG_ERROR, "Resolution %dx%d too large for mov/mp4\n", st->codecpar->width, st->codecpar->height);
@@ -6105,6 +6120,8 @@ static int mov_init(AVFormatContext *s)
             }
         } else if (st->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             track->timescale = st->codecpar->sample_rate;
+			av_log(NULL, AV_LOG_ERROR, "ppt, in mov_init, st->codecpar->frame_size: %d, bits_pri_sample: %d.\n",
+				st->codecpar->frame_size, av_get_bits_per_sample(st->codecpar->codec_id));
             if (!st->codecpar->frame_size && !av_get_bits_per_sample(st->codecpar->codec_id)) {
                 av_log(s, AV_LOG_WARNING, "track %d: codec frame size is not set\n", i);
                 track->audio_vbr = 1;
@@ -6163,7 +6180,7 @@ static int mov_init(AVFormatContext *s)
          * some tools, such as mp4split. */
         if (mov->mode == MODE_ISM)
             track->timescale = 10000000;
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in mov_init, track->timescale = %u.\n", track->timescale);
         avpriv_set_pts_info(st, 64, 1, track->timescale);
 
         if (mov->encryption_scheme == MOV_ENC_CENC_AES_CTR) {

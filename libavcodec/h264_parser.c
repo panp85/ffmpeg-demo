@@ -71,7 +71,7 @@ static int h264_find_frame_end(H264ParseContext *p, const uint8_t *buf,
     int i, j;
     uint32_t state;
     ParseContext *pc = &p->pc;
-
+    av_log(NULL, AV_LOG_INFO, "parser ppt, in h264_find_frame_end, p->is_avc: %d.\n", p->is_avc);
     int next_avc = p->is_avc ? 0 : buf_size;
 //    mb_addr= pc->mb_addr - 1;
     state = pc->state;
@@ -293,7 +293,7 @@ static inline int parse_nal_units(AVCodecParserContext *s,
         case H264_NAL_SLICE:
         case H264_NAL_IDR_SLICE:
             // Do not walk the whole buffer just to decode slice header
-            if ((state & 0x1f) == H264_NAL_IDR_SLICE || ((state >> 5) & 0x3) == 0) {
+            if ((state & 0x1f) == H264_NAL_IDR_SLICE || ((state >> 5) & 0x3) == 0) {//ppt, https://blog.csdn.net/newthinker_wei/article/details/8748442
                 /* IDR or disposable slice
                  * No need to decode many bytes because MMCOs shall not be present. */
                 if (src_length > 60)
@@ -584,7 +584,7 @@ static int h264_parse(AVCodecParserContext *s,
                                      avctx->err_recognition, avctx);
         }
     }
-
+    av_log(NULL, AV_LOG_INFO, "parser ppt, in h264_parse, s->flags = %x.\n", s->flags);
     if (s->flags & PARSER_FLAG_COMPLETE_FRAMES) {
         next = buf_size;
     } else {

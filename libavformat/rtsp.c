@@ -221,7 +221,10 @@ static void init_rtp_handler(const RTPDynamicProtocolHandler *handler,
         par->codec_id          = handler->codec_id;
     rtsp_st->dynamic_handler = handler;
     if (st)
+    {
+        av_log(NULL, AV_LOG_INFO, "rtsp ppt, in init_rtp_handler, set need_parsing to handler->need_parsing.\n");
         st->need_parsing = handler->need_parsing;
+    }
     if (handler->priv_data_size) {
         rtsp_st->dynamic_protocol_context = av_mallocz(handler->priv_data_size);
         if (!rtsp_st->dynamic_protocol_context)
@@ -273,6 +276,7 @@ static int sdp_parse_rtpmap(AVFormatContext *s,
     if (par->codec_id == AV_CODEC_ID_NONE) {
         const RTPDynamicProtocolHandler *handler =
             ff_rtp_handler_find_by_name(buf, par->codec_type);
+		av_log(NULL, AV_LOG_INFO, "rtsp ppt, in sdp_parse_rtpmap, handler: %s, go to init_rtp_handler.\n", handler->enc_name);
         init_rtp_handler(handler, rtsp_st, st);
         /* If no dynamic handler was found, check with the list of standard
          * allocated types, if such a stream for some reason happens to
@@ -524,6 +528,9 @@ static void sdp_parse_line(AVFormatContext *s, SDPParseState *s1,
                 /* Even static payload types may need a custom depacketizer */
                 handler = ff_rtp_handler_find_by_id(
                               rtsp_st->sdp_payload_type, st->codecpar->codec_type);
+				av_log(NULL, AV_LOG_INFO, 
+					"rtsp ppt, in sdp_parse_line, handler: %s, go to init_rtp_handler.\n", 
+					handler->enc_name);
                 init_rtp_handler(handler, rtsp_st, st);
                 finalize_rtp_handler_init(s, rtsp_st, st);
             }
@@ -1197,7 +1204,7 @@ start:
         }
         *q = '\0';
 
-        av_log(s, AV_LOG_TRACE, "line='%s'\n", buf);
+        av_log(s, AV_LOG_ERROR, "ppt, in ff_rtsp_read_reply, line='%s'\n", buf);
 
         /* test if last line */
         if (buf[0] == '\0')
@@ -1233,6 +1240,7 @@ start:
         if (!content)
             return AVERROR(ENOMEM);
         ffurl_read_complete(rt->rtsp_hd, content, content_length);
+		av_log(s, AV_LOG_ERROR, "ppt, in ff_rtsp_read_reply, content:%s\n", content);
         content[content_length] = '\0';
     }
     if (content_ptr)
@@ -1244,7 +1252,7 @@ start:
         char buf[1024];
         char base64buf[AV_BASE64_SIZE(sizeof(buf))];
         const char* ptr = buf;
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_read_reply, request yes.\n");
         if (!strcmp(reply->reason, "OPTIONS")) {
             snprintf(buf, sizeof(buf), "RTSP/1.0 200 OK\r\n");
             if (reply->seq)
@@ -1277,7 +1285,9 @@ start:
             goto start;
         return 0;
     }
-
+    else{
+		av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_read_reply, request no.\n");
+    }
     if (rt->seq != reply->seq) {
         av_log(s, AV_LOG_WARNING, "CSeq %d expected, %d received.\n",
             rt->seq, reply->seq);
@@ -1392,6 +1402,9 @@ int ff_rtsp_send_cmd_with_content(AVFormatContext *s,
 
 retry:
     cur_auth_type = rt->auth_state.auth_type;
+	av_log(NULL, AV_LOG_ERROR, 
+		"ppt, in ff_rtsp_send_cmd_with_content, go to rtsp_send_cmd_with_content_async, method: %s, header: %s.\n",
+		method, header);
     if ((ret = rtsp_send_cmd_with_content_async(s, method, url, header,
                                                 send_content,
                                                 send_content_length)))
@@ -1443,7 +1456,8 @@ int ff_rtsp_make_setup_request(AVFormatContext *s, const char *host, int port,
     port_off = av_get_random_seed() % ((rt->rtp_port_max - rt->rtp_port_min)/2);
     /* even random offset */
     port_off -= port_off & 0x01;
-
+    av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_make_setup_request, rtp_port_min/rtp_port_max: %d, %d.\n", 
+		rt->rtp_port_min, rt->rtp_port_max);
     for (j = rt->rtp_port_min + port_off, i = 0; i < rt->nb_rtsp_streams; ++i) {
         char transport[2048];
 
@@ -1488,6 +1502,8 @@ int ff_rtsp_make_setup_request(AVFormatContext *s, const char *host, int port,
                             "?localport=%d", j);
                 /* we will use two ports per rtp stream (rtp and rtcp) */
                 j += 2;
+				av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_make_setup_request, go to ffurl_open_whitelist, path: %s.\n", 
+					buf);
                 err = ffurl_open_whitelist(&rtsp_st->rtp_handle, buf, AVIO_FLAG_READ_WRITE,
                                  &s->interrupt_callback, &opts, s->protocol_whitelist, s->protocol_blacklist, NULL);
 
@@ -1723,6 +1739,7 @@ redirect:
         lower_transport_mask = (1 << RTSP_LOWER_TRANSPORT_NB) - 1;
 
     if (s->oformat) {
+		av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_connect, s->oformat yes.\n");
         /* Only UDP or TCP - UDP multicast isn't supported. */
         lower_transport_mask &= (1 << RTSP_LOWER_TRANSPORT_UDP) |
                                 (1 << RTSP_LOWER_TRANSPORT_TCP);
@@ -1733,6 +1750,9 @@ redirect:
             goto fail;
         }
     }
+	else{
+		av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_connect, s->oformat no.\n");
+	}
 
     /* Construct the URI used in request; this is similar to s->url,
      * but with authentication credentials removed and RTSP specific options
@@ -1896,7 +1916,7 @@ redirect:
     do {
         int lower_transport = ff_log2_tab[lower_transport_mask &
                                   ~(lower_transport_mask - 1)];
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_connect, lower_transport = %d.\n", lower_transport);
         if ((lower_transport_mask & (1 << RTSP_LOWER_TRANSPORT_TCP))
                 && (rt->rtsp_flags & RTSP_FLAG_PREFER_TCP))
             lower_transport = RTSP_LOWER_TRANSPORT_TCP;
@@ -2138,6 +2158,7 @@ int ff_rtsp_fetch_packet(AVFormatContext *s, AVPacket *pkt)
 
     /* get next frames from the same RTP packet */
     if (rt->cur_transport_priv) {
+		//av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_fetch_packet, cur_transport_priv yes.\n");
         if (rt->transport == RTSP_TRANSPORT_RDT) {
             ret = ff_rdt_parse_packet(rt->cur_transport_priv, pkt, NULL, 0);
         } else if (rt->transport == RTSP_TRANSPORT_RTP) {
@@ -2160,6 +2181,7 @@ int ff_rtsp_fetch_packet(AVFormatContext *s, AVPacket *pkt)
     }
 
 redo:
+    av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtsp_fetch_packet, redo continue.\n");
     if (rt->transport == RTSP_TRANSPORT_RTP) {
         int i;
         int64_t first_queue_time = 0;

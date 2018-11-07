@@ -90,13 +90,17 @@ static int get_frame_internal(AVFilterContext *ctx, AVFrame *frame, int flags, i
     int status, ret;
     AVFrame *cur_frame;
     int64_t pts;
+	av_log(NULL, AV_LOG_INFO, "buffersink ppt, in get_frame_internal, ctx: %s.\n", ctx->name);
 
-    if (buf->peeked_frame)
+    if (buf->peeked_frame){
+		av_log(NULL, AV_LOG_INFO, "buffersink ppt, in get_frame_internal, peeked_frame yes, go to return_or_keep_frame.\n");
         return return_or_keep_frame(buf, frame, buf->peeked_frame, flags);
-
+    }
+	//av_log(NULL, AV_LOG_INFO, "buffersink ppt, in get_frame_internal, peeked_frame no, go to while.\n");
     while (1) {
         ret = samples ? ff_inlink_consume_samples(inlink, samples, samples, &cur_frame) :
                         ff_inlink_consume_frame(inlink, &cur_frame);
+	    av_log(NULL, AV_LOG_INFO, "buffersink ppt, in get_frame_internal, ctx: %s, ret = %d.\n", ctx->name, ret);
         if (ret < 0) {
             return ret;
         } else if (ret) {
@@ -105,12 +109,15 @@ static int get_frame_internal(AVFilterContext *ctx, AVFrame *frame, int flags, i
         } else if (ff_inlink_acknowledge_status(inlink, &status, &pts)) {
             return status;
         } else if ((flags & AV_BUFFERSINK_FLAG_NO_REQUEST)) {
+			av_log(NULL, AV_LOG_INFO, "buffersink ppt, in get_frame_internal, return EAGAIN.\n");
             return AVERROR(EAGAIN);
         } else if (inlink->frame_wanted_out) {
+			av_log(NULL, AV_LOG_INFO, "buffersink ppt, in get_frame_internal, go to ff_filter_graph_run_once.\n");
             ret = ff_filter_graph_run_once(ctx->graph);
             if (ret < 0)
                 return ret;
         } else {
+            av_log(NULL, AV_LOG_INFO, "buffersink ppt, in get_frame_internal, go to ff_inlink_request_frame.\n");
             ff_inlink_request_frame(inlink);
         }
     }

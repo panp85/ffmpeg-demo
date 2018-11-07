@@ -159,7 +159,7 @@ int attribute_align_arg av_buffersrc_add_frame_flags(AVFilterContext *ctx, AVFra
         av_log(ctx, AV_LOG_ERROR, "Layout indicates a different number of channels than actually present\n");
         return AVERROR(EINVAL);
     }
-
+    av_log(NULL, AV_LOG_INFO, "filter ppt, in av_buffersrc_add_frame_flags, flags = 0x%x.\n", flags);
     if (!(flags & AV_BUFFERSRC_FLAG_KEEP_REF) || !frame)
         return av_buffersrc_add_frame_internal(ctx, frame, flags);
 
@@ -247,7 +247,9 @@ static int av_buffersrc_add_frame_internal(AVFilterContext *ctx,
         av_frame_free(&copy);
         return ret;
     }
-
+    av_log(NULL, AV_LOG_INFO, 
+        "buffersrc ppt, in av_buffersrc_add_frame_internal, go to request_frame, ctx: %s.\n", 
+        ctx->name);
     if ((ret = ctx->output_pads[0].request_frame(ctx->outputs[0])) < 0)
         return ret;
 
@@ -456,10 +458,12 @@ static int config_props(AVFilterLink *link)
 
 static int request_frame(AVFilterLink *link)
 {
+    av_log(NULL, AV_LOG_INFO, "buffersrc ppt, in request_frame buffersrc, link->src: %s.\n",
+		link->src->filter->name);
     BufferSourceContext *c = link->src->priv;
     AVFrame *frame;
     int ret;
-
+    
     if (!av_fifo_size(c->fifo)) {
         if (c->eof)
             return AVERROR_EOF;
@@ -467,7 +471,7 @@ static int request_frame(AVFilterLink *link)
         return AVERROR(EAGAIN);
     }
     av_fifo_generic_read(c->fifo, &frame, sizeof(frame), NULL);
-
+	av_log(NULL, AV_LOG_INFO, "buffersrc ppt, in request_frame buffersrc, go to ff_filter_frame.\n");
     ret = ff_filter_frame(link, frame);
 
     return ret;

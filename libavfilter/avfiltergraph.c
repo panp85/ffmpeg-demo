@@ -219,7 +219,8 @@ static int graph_check_validity(AVFilterGraph *graph, AVClass *log_ctx)
     for (i = 0; i < graph->nb_filters; i++) {
         const AVFilterPad *pad;
         filt = graph->filters[i];
-
+        av_log(NULL, AV_LOG_INFO, "filter ppt, in graph_check_validity, filt->name: %s, filt->nb_inputs: %d.\n", 
+			filt->name, filt->nb_inputs);
         for (j = 0; j < filt->nb_inputs; j++) {
             if (!filt->inputs[j] || !filt->inputs[j]->src) {
                 pad = &filt->input_pads[j];
@@ -229,7 +230,8 @@ static int graph_check_validity(AVFilterGraph *graph, AVClass *log_ctx)
                 return AVERROR(EINVAL);
             }
         }
-
+		av_log(NULL, AV_LOG_INFO, "filter ppt, in graph_check_validity, filt->name: %s, filt->nb_inputs: %d.\n", 
+					filt->name, filt->nb_outputs);
         for (j = 0; j < filt->nb_outputs; j++) {
             if (!filt->outputs[j] || !filt->outputs[j]->dst) {
                 pad = &filt->output_pads[j];
@@ -1230,10 +1232,14 @@ static int graph_insert_fifos(AVFilterGraph *graph, AVClass *log_ctx)
     AVFilterContext *f;
     int i, j, ret;
     int fifo_count = 0;
-
+    av_log(NULL, AV_LOG_INFO, 
+		"filter ppt, in graph_insert_fifos, graph->nb_filters = %d.\n", graph->nb_filters);
+	
     for (i = 0; i < graph->nb_filters; i++) {
         f = graph->filters[i];
-
+        av_log(NULL, AV_LOG_INFO, 
+		    "filter ppt, in graph_insert_fifos, f = %s.\n", f->name);
+	
         for (j = 0; j < f->nb_inputs; j++) {
             AVFilterLink *link = f->inputs[j];
             AVFilterContext *fifo_ctx;
@@ -1242,7 +1248,8 @@ static int graph_insert_fifos(AVFilterGraph *graph, AVClass *log_ctx)
 
             if (!link->dstpad->needs_fifo)
                 continue;
-
+			av_log(NULL, AV_LOG_INFO, 
+						"filter ppt, in graph_insert_fifos, fifo j: %d.\n", j);
             fifo = f->inputs[j]->type == AVMEDIA_TYPE_VIDEO ?
                    avfilter_get_by_name("fifo") :
                    avfilter_get_by_name("afifo");

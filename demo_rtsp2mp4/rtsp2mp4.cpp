@@ -22,9 +22,15 @@ extern "C" {
 
 AVFormatContext *i_fmt_ctx; 
 AVStream *i_video_stream;
+AVStream *i_audio_stream;
 
 AVFormatContext *o_fmt_ctx; 
 AVStream *o_video_stream;
+AVStream *o_audio_stream;
+
+int video_index;
+int audio_index;
+
 
 int main(int argc, char **argv) 
 { 
@@ -57,6 +63,7 @@ int main(int argc, char **argv)
         if (i_fmt_ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) 
         { 
             i_video_stream = i_fmt_ctx->streams[i]; 
+			video_index = i;
             break; 
         } 
     } 
@@ -66,35 +73,89 @@ int main(int argc, char **argv)
         return -1; 
     }
 
+	/* find first audio stream */ 
+    for (unsigned j = 0; j<i_fmt_ctx->nb_streams; j++) 
+    { 
+        if (i_fmt_ctx->streams[j]->codec->codec_type == AVMEDIA_TYPE_AUDIO) 
+        { 
+            i_audio_stream = i_fmt_ctx->streams[j]; 
+			audio_index = j;
+            break; 
+        } 
+    } 
+    if (i_audio_stream == NULL) 
+    { 
+        fprintf(stderr, "didn't find any audio stream\n"); 
+        return -1; 
+    }
+	printf("video, audio: %d, %d.\n", video_index, audio_index);
+
     avformat_alloc_output_context2(&o_fmt_ctx, NULL, NULL, filename);
 
     /* 
     * since all input files are supposed to be identical (framerate, dimension, color format, ...) 
     * we can safely set output codec values from first input file 
     */ 
-    o_video_stream = avformat_new_stream(o_fmt_ctx, NULL); 
-    { 
-        AVCodecContext *c; 
-        c = o_video_stream->codec; 
-        c->bit_rate = 400000; 
-        c->codec_id = i_video_stream->codec->codec_id; 
-        c->codec_type = i_video_stream->codec->codec_type; 
-        c->time_base.num = i_video_stream->time_base.num; 
-        c->time_base.den = i_video_stream->time_base.den; 
-        fprintf(stderr, "time_base.num = %d time_base.den = %d\n", c->time_base.num, c->time_base.den); 
-        c->width = i_video_stream->codec->width; 
-        c->height = i_video_stream->codec->height; 
-        c->pix_fmt = i_video_stream->codec->pix_fmt; 
-        printf("%d %d %d", c->width, c->height, c->pix_fmt); 
-        c->flags = i_video_stream->codec->flags; 
-        c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER; 
-        c->me_range = i_video_stream->codec->me_range; 
-        c->max_qdiff = i_video_stream->codec->max_qdiff;
+    for(int ii = 0; ii < i_fmt_ctx->nb_streams; ii++)
+    {
+        if(ii == video_index){
+		    o_video_stream = avformat_new_stream(o_fmt_ctx, NULL); 
+		    if(1){ 
+		        AVCodecContext *c; 
+		        c = o_video_stream->codec; 
+		        c->bit_rate = 400000; 
+		        c->codec_id = i_video_stream->codec->codec_id; 
+		        c->codec_type = i_video_stream->codec->codec_type; 
+		        c->time_base.num = i_video_stream->time_base.num; 
+		        c->time_base.den = i_video_stream->time_base.den; 
+		        fprintf(stderr, "time_base.num = %d time_base.den = %d\n", c->time_base.num, c->time_base.den); 
+		        c->width = i_video_stream->codec->width; 
+		        c->height = i_video_stream->codec->height; 
+		        c->pix_fmt = i_video_stream->codec->pix_fmt; 
+		        printf("%d %d %d", c->width, c->height, c->pix_fmt); 
+		        c->flags = i_video_stream->codec->flags; 
+		        c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER; 
+		        c->me_range = i_video_stream->codec->me_range; 
+		        c->max_qdiff = i_video_stream->codec->max_qdiff;
 
-        c->qmin = i_video_stream->codec->qmin; 
-        c->qmax = i_video_stream->codec->qmax;
+		        c->qmin = i_video_stream->codec->qmin; 
+		        c->qmax = i_video_stream->codec->qmax;
 
-        c->qcompress = i_video_stream->codec->qcompress; 
+		        c->qcompress = i_video_stream->codec->qcompress; 
+		    }
+        }
+		if(ii == audio_index){
+			o_audio_stream = avformat_new_stream(o_fmt_ctx, NULL); 
+		    if(1){ 
+		        AVCodecContext *c; 
+		        c = o_audio_stream->codec; 
+		        //c->bit_rate = 400000; 
+				c->bit_rate           =  i_audio_stream ->codec->bit_rate;   
+				c->gop_size           =  i_audio_stream ->codec->gop_size;
+				c->channel_layout =  i_audio_stream ->codec->channel_layout;  
+				c->frame_size     =  i_audio_stream ->codec->frame_size;
+				c->sample_rate        =  i_audio_stream ->codec->sample_rate; 
+				c->channels           =  i_audio_stream ->codec->channels;
+				c->block_align        =  i_audio_stream ->codec->block_align; 
+				
+		        c->codec_id = i_audio_stream->codec->codec_id; 
+		        c->codec_type = i_audio_stream->codec->codec_type; 
+		        c->time_base.num = i_audio_stream->time_base.num; 
+		        c->time_base.den = i_audio_stream->time_base.den; 
+		        fprintf(stderr, "time_base.num = %d time_base.den = %d\n", c->time_base.num, c->time_base.den); 
+		        
+		        c->pix_fmt = i_audio_stream->codec->pix_fmt; 
+		        c->flags = i_audio_stream->codec->flags; 
+		        c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER; 
+		        //c->me_range = i_audio_stream->codec->me_range; 
+		        //c->max_qdiff = i_audio_stream->codec->max_qdiff;
+
+		        //c->qmin = i_audio_stream->codec->qmin; 
+		        //c->qmax = i_audio_stream->codec->qmax;
+
+		        c->qcompress = i_audio_stream->codec->qcompress; 
+		    }
+		}
     }
 
     avio_open(&o_fmt_ctx->pb, filename, AVIO_FLAG_WRITE);
@@ -105,6 +166,7 @@ int main(int argc, char **argv)
     int last_dts = 0;
 
     int64_t pts, dts; 
+	int total_nul = 200;
     while (1) 
     { 
         AVPacket i_pkt; 
@@ -113,6 +175,11 @@ int main(int argc, char **argv)
         i_pkt.data = NULL; 
         if (av_read_frame(i_fmt_ctx, &i_pkt) <0 ) 
             break; 
+		printf("index: %lld\n", i_pkt.stream_index); 
+		if(i_pkt.stream_index == audio_index)
+		{
+		 //   continue;
+		}
         /* 
         * pts and dts should increase monotonically 
         * pts should be >= dts 
@@ -122,12 +189,15 @@ int main(int argc, char **argv)
         i_pkt.pts += last_pts; 
         dts = i_pkt.dts; 
         i_pkt.dts += last_dts; 
-        i_pkt.stream_index = 0;
+        //i_pkt.stream_index = 0;
 
         //printf("%lld %lld\n", i_pkt.pts, i_pkt.dts); 
         static int num = 1; 
         printf("frame %d\n", num++); 
         av_interleaved_write_frame(o_fmt_ctx, &i_pkt); 
+		if(num >= total_nul){
+		    break;
+		}
         //av_free_packet(&i_pkt); 
         //av_init_packet(&i_pkt); 
     } 

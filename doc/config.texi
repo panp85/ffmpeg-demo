@@ -198,6 +198,7 @@
 @c @set have-es2-gl-h no
 @c @set have-gsm-h no
 @c @set have-io-h no
+@set have-linux-perf-event-h yes
 @c @set have-machine-ioctl-bt848-h no
 @c @set have-machine-ioctl-meteor-h no
 @set have-malloc-h yes
@@ -303,10 +304,10 @@
 @c @set have-utgetostypefromstring no
 @c @set have-virtualalloc no
 @c @set have-wglgetprocaddress no
+@c @set have-bcrypt no
 @c @set have-vaapi-drm no
 @c @set have-vaapi-x11 no
 @c @set have-vdpau-x11 no
-@c @set have-wincrypt no
 @set have-pthreads yes
 @c @set have-os2threads no
 @c @set have-w32threads no
@@ -317,7 +318,7 @@
 @c @set have-as-object-arch no
 @c @set have-asm-mod-q no
 @c @set have-blocks-extension no
-@set have-ebp-available yes
+@c @set have-ebp-available no
 @set have-ebx-available yes
 @c @set have-gnu-as no
 @c @set have-gnu-windres no
@@ -341,14 +342,14 @@
 @set have-struct-msghdr-msg-flags yes
 @set have-struct-pollfd yes
 @set have-struct-rusage-ru-maxrss yes
-@c @set have-struct-sctp-event-subscribe no
+@set have-struct-sctp-event-subscribe yes
 @set have-struct-sockaddr-in6 yes
 @c @set have-struct-sockaddr-sa-len no
 @set have-struct-sockaddr-storage yes
 @set have-struct-stat-st-mtim-tv-nsec yes
 @set have-struct-v4l2-frmivalenum-discrete yes
-@c @set have-makeinfo no
-@c @set have-makeinfo-html no
+@set have-makeinfo yes
+@set have-makeinfo-html yes
 @c @set have-opencl-d3d11 no
 @c @set have-opencl-drm-arm no
 @c @set have-opencl-drm-beignet no
@@ -359,10 +360,10 @@
 @set have-pod2man yes
 @c @set have-texi2html no
 @set config-doc yes
-@c @set config-htmlpages no
+@set config-htmlpages yes
 @set config-manpages yes
 @set config-podpages yes
-@c @set config-txtpages no
+@set config-txtpages yes
 @set config-avio-dir-cmd-example yes
 @set config-avio-reading-example yes
 @set config-decode-audio-example yes
@@ -465,14 +466,15 @@
 @c @set config-mediacodec no
 @c @set config-openal no
 @c @set config-opengl no
-@c @set config-alsa no
+@c @set config-vapoursynth no
+@set config-alsa yes
 @c @set config-appkit no
 @c @set config-avfoundation no
-@c @set config-bzlib no
+@set config-bzlib yes
 @c @set config-coreimage no
 @set config-iconv yes
 @set config-libxcb yes
-@c @set config-libxcb-shm no
+@set config-libxcb-shm yes
 @set config-libxcb-shape yes
 @set config-libxcb-xfixes yes
 @c @set config-lzma no
@@ -573,6 +575,7 @@
 @set config-cbs-h264 yes
 @set config-cbs-h265 yes
 @set config-cbs-mpeg2 yes
+@c @set config-cbs-vp9 no
 @set config-dirac-parse yes
 @set config-dvprofile yes
 @set config-exif yes
@@ -1479,7 +1482,7 @@
 @set config-vp8-parser yes
 @set config-vp9-parser yes
 @set config-xma-parser yes
-@c @set config-alsa-indev no
+@set config-alsa-indev yes
 @c @set config-android-camera-indev no
 @c @set config-avfoundation-indev no
 @c @set config-bktr-indev no
@@ -1501,7 +1504,7 @@
 @set config-xcbgrab-indev yes
 @c @set config-libcdio-indev no
 @c @set config-libdc1394-indev no
-@c @set config-alsa-outdev no
+@set config-alsa-outdev yes
 @c @set config-caca-outdev no
 @c @set config-decklink-outdev no
 @c @set config-libndi-newtek-outdev no
@@ -2360,7 +2363,7 @@
 @c @set config-rtmpte-protocol no
 @c @set config-rtmpts-protocol no
 @set config-rtp-protocol yes
-@c @set config-sctp-protocol no
+@set config-sctp-protocol yes
 @set config-srtp-protocol yes
 @set config-subfile-protocol yes
 @set config-tee-protocol yes
