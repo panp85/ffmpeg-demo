@@ -240,7 +240,7 @@ static int rtmp_send_packet(RTMPContext *rt, RTMPPacket *pkt, int track)
 
         if ((ret = ff_amf_read_number(&gbc, &pkt_id)) < 0)
             goto fail;
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in rtmp_send_packet, go to add_tracked_method, name, pkt_id: %s, %lf.\n", name, pkt_id);        
         if ((ret = add_tracked_method(rt, name, pkt_id)) < 0)
             goto fail;
     }
@@ -372,7 +372,7 @@ static int gen_connect(URLContext *s, RTMPContext *rt)
         }
     }
     ff_amf_write_object_end(&p);
-
+    av_log(NULL, AV_LOG_INFO, "ppt, in gen_connect, rt->conn: %s.\n", rt->conn);
     if (rt->conn) {
         char *param = rt->conn;
 
@@ -974,7 +974,7 @@ static int gen_fcsubscribe_stream(URLContext *s, RTMPContext *rt,
     RTMPPacket pkt;
     uint8_t *p;
     int ret;
-
+    av_log(NULL, AV_LOG_INFO, "ppt, in gen_fcsubscribe_stream, subscribe: %s.\n", subscribe);
     if ((ret = ff_rtmp_packet_create(&pkt, RTMP_SYSTEM_CHANNEL, RTMP_PT_INVOKE,
                                      0, 27 + strlen(subscribe))) < 0)
         return ret;
@@ -1004,8 +1004,8 @@ static int rtmp_handshake_imprint_with_digest(uint8_t *buf, int encrypted)
         digest_pos = ff_rtmp_calc_digest_pos(buf, 772, 728, 776);
     else
         digest_pos = ff_rtmp_calc_digest_pos(buf, 8, 728, 12);
-
-    ret = ff_rtmp_calc_digest(buf, RTMP_HANDSHAKE_PACKET_SIZE, digest_pos,
+    av_log(NULL, AV_LOG_ERROR, "ppt, in rtmp_handshake_imprint_with_digest, digest_pos = %d.\n", digest_pos);
+    ret = ff_rtmp_calc_digest(buf, RTMP_HANDSHAKE_PACKET_SIZE, digest_pos,//用rtmp_player_key作为key计算digest
                               rtmp_player_key, PLAYER_KEY_OPEN_PART_LEN,
                               buf + digest_pos);
     if (ret < 0)
@@ -1257,16 +1257,16 @@ static int rtmp_handshake(URLContext *s, RTMPContext *rt)
         return ret;
     }
 
-    av_log(s, AV_LOG_DEBUG, "Type answer %d\n", serverdata[0]);
-    av_log(s, AV_LOG_DEBUG, "Server version %d.%d.%d.%d\n",
+    av_log(s, AV_LOG_INFO, "ppt, in rtmp_handshake, Type answer %d\n", serverdata[0]);
+    av_log(s, AV_LOG_INFO, "ppt, in rtmp_handshake, Server version %d.%d.%d.%d\n",
            serverdata[5], serverdata[6], serverdata[7], serverdata[8]);
 
     if (rt->is_input && serverdata[5] >= 3) {
-        server_pos = rtmp_validate_digest(serverdata + 1, 772);
+        server_pos = rtmp_validate_digest(serverdata + 1, 772);//server发过来的s1,校验
         if (server_pos < 0)
             return server_pos;
 
-        if (!server_pos) {
+        if (!server_pos) {//如果c1s1 schema0  就用c1s1 schema1
             type = 1;
             server_pos = rtmp_validate_digest(serverdata + 1, 8);
             if (server_pos < 0)
@@ -1286,14 +1286,14 @@ static int rtmp_handshake(URLContext *s, RTMPContext *rt)
                 return ret;
         }
 
-        ret = ff_rtmp_calc_digest(tosend + 1 + client_pos, 32, 0,
+        ret = ff_rtmp_calc_digest(tosend + 1 + client_pos, 32, 0,//用c1的数据以rtmp_server_key作为key计算digest
                                   rtmp_server_key, sizeof(rtmp_server_key),
                                   digest);
         if (ret < 0)
             return ret;
 
         ret = ff_rtmp_calc_digest(clientdata, RTMP_HANDSHAKE_PACKET_SIZE - 32,
-                                  0, digest, 32, signature);
+                                  0, digest, 32, signature);//s2以digest为key计算出signature,step4
         if (ret < 0)
             return ret;
 
@@ -1308,20 +1308,20 @@ static int rtmp_handshake(URLContext *s, RTMPContext *rt)
             ff_rtmpe_encrypt_sig(rt->stream, signature, digest, serverdata[0]);
         }
 
-        if (memcmp(signature, clientdata + RTMP_HANDSHAKE_PACKET_SIZE - 32, 32)) {
+        if (memcmp(signature, clientdata + RTMP_HANDSHAKE_PACKET_SIZE - 32, 32)) {//step4计算出来的signature和收到的s2进行比较
             av_log(s, AV_LOG_ERROR, "Signature mismatch\n");
             return AVERROR(EIO);
         }
 
         for (i = 0; i < RTMP_HANDSHAKE_PACKET_SIZE; i++)
             tosend[i] = av_lfg_get(&rnd) >> 24;
-        ret = ff_rtmp_calc_digest(serverdata + 1 + server_pos, 32, 0,
+        ret = ff_rtmp_calc_digest(serverdata + 1 + server_pos, 32, 0,//通过s1以rtmp_player_key为key计算出待发送的c2的中间数据digest
                                   rtmp_player_key, sizeof(rtmp_player_key),
                                   digest);
         if (ret < 0)
             return ret;
 
-        ret = ff_rtmp_calc_digest(tosend, RTMP_HANDSHAKE_PACKET_SIZE - 32, 0,
+        ret = ff_rtmp_calc_digest(tosend, RTMP_HANDSHAKE_PACKET_SIZE - 32, 0,//通过tosend以digest为key计算出最后的32位数据
                                   digest, 32,
                                   tosend + RTMP_HANDSHAKE_PACKET_SIZE - 32);
         if (ret < 0)
@@ -2059,6 +2059,7 @@ static int handle_invoke_result(URLContext *s, RTMPPacket *pkt)
     }
 
     if (!strcmp(tracked_method, "connect")) {
+		av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke_result, rt->is_input: %d.\n", rt->is_input);
         if (!rt->is_input) {
             if ((ret = gen_release_stream(s, rt)) < 0)
                 goto fail;
@@ -2074,6 +2075,7 @@ static int handle_invoke_result(URLContext *s, RTMPPacket *pkt)
             goto fail;
 
         if (rt->is_input) {
+			av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke_result, rt->subscribe:%s, rt->live:%d.\n", rt->subscribe, rt->live);
             /* Send the FCSubscribe command when the name of live
              * stream is defined by the user or if it's a live stream. */
             if (rt->subscribe) {
@@ -2089,6 +2091,7 @@ static int handle_invoke_result(URLContext *s, RTMPPacket *pkt)
         if (read_number_result(pkt, &stream_id)) {
             av_log(s, AV_LOG_WARNING, "Unexpected reply on connect()\n");
         } else {
+            av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke_result, stream_id: %d.\n", stream_id);
             rt->stream_id = stream_id;
         }
 
@@ -2160,15 +2163,19 @@ static int handle_invoke(URLContext *s, RTMPPacket *pkt)
 
     //TODO: check for the messages sent for wrong state?
     if (ff_amf_match_string(pkt->data, pkt->size, "_error")) {
+		av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke, go to handle_invoke_error.\n");
         if ((ret = handle_invoke_error(s, pkt)) < 0)
             return ret;
     } else if (ff_amf_match_string(pkt->data, pkt->size, "_result")) {
+        av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke, go to handle_invoke_result.\n");
         if ((ret = handle_invoke_result(s, pkt)) < 0)
             return ret;
     } else if (ff_amf_match_string(pkt->data, pkt->size, "onStatus")) {
+        av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke, go to handle_invoke_status.\n");
         if ((ret = handle_invoke_status(s, pkt)) < 0)
             return ret;
     } else if (ff_amf_match_string(pkt->data, pkt->size, "onBWDone")) {
+        av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke, go to gen_check_bw.\n");
         if ((ret = gen_check_bw(s, rt)) < 0)
             return ret;
     } else if (ff_amf_match_string(pkt->data, pkt->size, "releaseStream") ||
@@ -2177,6 +2184,7 @@ static int handle_invoke(URLContext *s, RTMPPacket *pkt)
                ff_amf_match_string(pkt->data, pkt->size, "play")          ||
                ff_amf_match_string(pkt->data, pkt->size, "_checkbw")      ||
                ff_amf_match_string(pkt->data, pkt->size, "createStream")) {
+        av_log(NULL, AV_LOG_INFO, "ppt, in handle_invoke, go to send_invoke_response.\n");
         if ((ret = send_invoke_response(s, pkt)) < 0)
             return ret;
     }
@@ -2248,7 +2256,7 @@ static int handle_notify(URLContext *s, RTMPPacket *pkt)
     if (ff_amf_read_string(&gbc, commandbuffer, sizeof(commandbuffer),
                            &stringlen))
         return AVERROR_INVALIDDATA;
-
+    av_log(NULL, AV_LOG_INFO, "ppt, in handle_notify, commandbuffer: %s.\n", commandbuffer);
     if (!strcmp(commandbuffer, "onMetaData")) {
         // metadata properties should be stored in a mixed array
         if (bytestream2_get_byte(&gbc) == AMF_DATA_TYPE_MIXEDARRAY) {
@@ -2306,7 +2314,7 @@ static int rtmp_parse_result(URLContext *s, RTMPContext *rt, RTMPPacket *pkt)
 #ifdef DEBUG
     ff_rtmp_packet_dump(s, pkt);
 #endif
-
+    av_log(NULL, AV_LOG_INFO, "ppt, in rtmp_parse_result, pkt->type: %d.\n", pkt->type);
     switch (pkt->type) {
     case RTMP_PT_BYTES_READ:
         av_log(s, AV_LOG_TRACE, "received bytes read report\n");
@@ -2437,7 +2445,7 @@ static int get_packet(URLContext *s, int for_header)
             }
             rt->last_bytes_read = rt->bytes_read;
         }
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in get_packet, go to rtmp_parse_result.\n");
         ret = rtmp_parse_result(s, rt, &rpkt);
 
         // At this point we must check if we are in the seek state and continue
@@ -2674,7 +2682,7 @@ reconnect:
     }
 
     rt->state = STATE_START;
-    if (!rt->listen && (ret = rtmp_handshake(s, rt)) < 0)
+    if (!rt->listen && (ret = rtmp_handshake(s, rt)) < 0)//握手
         goto fail;
     if (rt->listen && (ret = rtmp_server_handshake(s, rt)) < 0)
         goto fail;
@@ -2712,6 +2720,7 @@ reconnect:
     } else {
         char *next = *path ? path + 1 : path;
         char *p = strchr(next, '/');
+		av_log(NULL, AV_LOG_ERROR, "ppt, in rtmp_open, path: %s, next: %s, p: %s.\n", path, next, p);
         if (!p) {
             if (old_app) {
                 // If name of application has been defined by the user, assume that
@@ -2744,7 +2753,7 @@ reconnect:
         av_free(rt->app);
         rt->app = old_app;
     }
-
+    av_log(NULL, AV_LOG_ERROR, "ppt, in rtmp_open, 1 rt->playpath: %s.\n", rt->playpath);
     if (!rt->playpath) {
         rt->playpath = av_malloc(PLAYPATH_MAX_LENGTH);
         if (!rt->playpath) {
@@ -2768,6 +2777,7 @@ reconnect:
             rt->playpath[0] = '\0';
         }
     }
+	av_log(NULL, AV_LOG_ERROR, "ppt, in rtmp_open, 2 rt->playpath: %s, rt->tcurl: %s.\n", rt->playpath, rt->tcurl);
 
     if (!rt->tcurl) {
         rt->tcurl = av_malloc(TCURL_MAX_LENGTH);
@@ -2778,6 +2788,7 @@ reconnect:
         ff_url_join(rt->tcurl, TCURL_MAX_LENGTH, proto, NULL, hostname,
                     port, "/%s", rt->app);
     }
+	av_log(NULL, AV_LOG_ERROR, "ppt, in rtmp_open, 3 rt->tcurl: %s.\n", rt->tcurl);
 
     if (!rt->flashver) {
         rt->flashver = av_malloc(FLASHVER_MAX_LENGTH);
@@ -2847,6 +2858,7 @@ reconnect:
         // the FLV decoder will allocate the needed streams when their first
         // audio or video packet arrives.
         while (!rt->has_audio && !rt->has_video && !rt->received_metadata) {
+			av_log(NULL, AV_LOG_INFO, "ppt, in rtmp_open, !rt->has_audio && !rt->has_video && !rt->received_metadata.\n");
             if ((ret = get_packet(s, 0)) < 0)
                goto fail;
         }
@@ -2864,6 +2876,7 @@ reconnect:
         // If we received the first packet of an A/V stream and no metadata but
         // the server returned a valid duration, create a fake metadata packet
         // to inform the FLV decoder about the duration.
+        av_log(NULL, AV_LOG_INFO, "ppt, in rtmp_open, rt->received_metadata: %d, rt->duration: %lf.\n", rt->received_metadata, rt->duration);
         if (!rt->received_metadata && rt->duration > 0) {
             if ((ret = inject_fake_duration_metadata(rt)) < 0)
                 goto fail;
@@ -2874,7 +2887,7 @@ reconnect:
         rt->flv_off  = 0;
         rt->skip_bytes = 13;
     }
-
+    av_log(NULL, AV_LOG_INFO, "ppt, in rtmp_open, end.\n");
     s->max_packet_size = rt->stream->max_packet_size;
     s->is_streamed     = 1;
     return 0;

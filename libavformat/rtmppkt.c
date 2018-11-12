@@ -140,6 +140,7 @@ int ff_rtmp_check_alloc_array(RTMPPacket **prev_pkt, int *nb_prev_pkt,
 {
     int nb_alloc;
     RTMPPacket *ptr;
+	av_log(NULL, AV_LOG_ERROR, "ppt, in ff_rtmp_check_alloc_array, channel, *nb_prev_pkt: %d, %d.\n", channel, *nb_prev_pkt);
     if (channel < *nb_prev_pkt)
         return 0;
 
@@ -332,7 +333,6 @@ int ff_rtmp_packet_write(URLContext *h, RTMPPacket *pkt,
     use_delta = prev_pkt[pkt->channel_id].channel_id &&
         pkt->extra == prev_pkt[pkt->channel_id].extra &&
         pkt->timestamp >= prev_pkt[pkt->channel_id].timestamp;
-
     timestamp = pkt->timestamp;
     if (use_delta) {
         timestamp -= prev_pkt[pkt->channel_id].timestamp;

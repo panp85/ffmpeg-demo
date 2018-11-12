@@ -76,6 +76,7 @@ static int probe(AVProbeData *p, int live)
 {
     const uint8_t *d = p->buf;
     unsigned offset = AV_RB32(d + 5);
+	av_log(NULL, AV_LOG_ERROR, "ppt, in probe flvdec.c, offset = %d.\n", offset);
 
     if (d[0] == 'F' &&
         d[1] == 'L' &&
@@ -117,7 +118,7 @@ static void add_keyframes_index(AVFormatContext *s)
 
     if (stream->nb_index_entries == 0) {
         for (i = 0; i < flv->keyframe_count; i++) {
-            av_log(s, AV_LOG_TRACE, "keyframe filepositions = %"PRId64" times = %"PRId64"\n",
+            av_log(s, AV_LOG_ERROR, "ppt, in add_keyframes_index, keyframe filepositions = %"PRId64" times = %"PRId64"\n",
                    flv->keyframe_filepositions[i], flv->keyframe_times[i] * 1000);
             av_add_index_entry(stream, flv->keyframe_filepositions[i],
                 flv->keyframe_times[i] * 1000, 0, 0, AVINDEX_KEYFRAME);
@@ -468,7 +469,7 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream,
     num_val  = 0;
     ioc      = s->pb;
     amf_type = avio_r8(ioc);
-
+    av_log(NULL, AV_LOG_ERROR, "ppt, in amf_parse_object, amf_type: %d.\n", amf_type);
     switch (amf_type) {
     case AMF_DATA_TYPE_NUMBER:
         num_val = av_int2double(avio_rb64(ioc));
@@ -492,10 +493,13 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream,
             else
                 add_keyframes_index(s);
         while (avio_tell(ioc) < max_pos - 2 &&
-               amf_get_string(ioc, str_val, sizeof(str_val)) > 0)
+               amf_get_string(ioc, str_val, sizeof(str_val)) > 0){
+            av_log(NULL, AV_LOG_INFO, "ppt, in amf_parse_object,AMF_DATA_TYPE_OBJECT go to amf_parse_object, str_val: %s.\n",
+				str_val);
             if (amf_parse_object(s, astream, vstream, str_val, max_pos,
                                  depth + 1) < 0)
                 return -1;     // if we couldn't skip, bomb out.
+        }
         if (avio_r8(ioc) != AMF_END_OF_OBJECT) {
             av_log(s, AV_LOG_ERROR, "Missing AMF_END_OF_OBJECT in AMF_DATA_TYPE_OBJECT\n");
             return -1;
@@ -510,12 +514,14 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream,
         unsigned v;
         avio_skip(ioc, 4);     // skip 32-bit max array index
         while (avio_tell(ioc) < max_pos - 2 &&
-               amf_get_string(ioc, str_val, sizeof(str_val)) > 0)
+               amf_get_string(ioc, str_val, sizeof(str_val)) > 0){
             // this is the only case in which we would want a nested
             // parse to not skip over the object
+            av_log(NULL, AV_LOG_INFO, "ppt, in amf_parse_object, AMF_DATA_TYPE_MIXEDARRAY go to amf_parse_object.\n");
             if (amf_parse_object(s, astream, vstream, str_val, max_pos,
                                  depth + 1) < 0)
                 return -1;
+        }
         v = avio_r8(ioc);
         if (v != AMF_END_OF_OBJECT) {
             av_log(s, AV_LOG_ERROR, "Missing AMF_END_OF_OBJECT in AMF_DATA_TYPE_MIXEDARRAY, found %d\n", v);
@@ -528,10 +534,12 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream,
         unsigned int arraylen, i;
 
         arraylen = avio_rb32(ioc);
-        for (i = 0; i < arraylen && avio_tell(ioc) < max_pos - 1; i++)
+        for (i = 0; i < arraylen && avio_tell(ioc) < max_pos - 1; i++){
+			av_log(NULL, AV_LOG_INFO, "ppt, in amf_parse_object, AMF_DATA_TYPE_ARRAY go to amf_parse_object.\n");
             if (amf_parse_object(s, NULL, NULL, NULL, max_pos,
                                  depth + 1) < 0)
                 return -1;      // if we couldn't skip, bomb out.
+        }
     }
     break;
     case AMF_DATA_TYPE_DATE:
@@ -682,6 +690,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos)
         av_log(s, AV_LOG_DEBUG, "Unknown type %s\n", buffer);
         return TYPE_UNKNOWN;
     }
+	av_log(NULL, AV_LOG_INFO, "ppt, in flv_read_metabody, s->nb_streams: %d.\n", s->nb_streams);
 
     // find the streams now so that amf_parse_object doesn't need to do
     // the lookup every time it is called.
@@ -698,7 +707,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos)
         else if (stream->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
             dstream = stream;
     }
-
+    av_log(NULL, AV_LOG_INFO, "ppt, in flv_read_metabody, go to amf_parse_object.\n");
     // parse the second object (we want a mixed array)
     if (amf_parse_object(s, astream, vstream, buffer, next_pos, 0) < 0)
         return -1;
@@ -962,7 +971,7 @@ retry:
                 if (FFABS(dts - flv->validate_index[flv->validate_next].dts) <=
                     VALIDATE_INDEX_TS_THRESH) {
                     flv->validate_next++;
-                } else {
+                } else {   
                     clear_index_entries(s, validate_pos);
                     flv->validate_count = 0;
                 }
@@ -994,6 +1003,7 @@ retry:
             if (size > 13 + 1 + 4) { // Header-type metadata stuff
                 int type;
                 meta_pos = avio_tell(s->pb);
+			    av_log(NULL, AV_LOG_ERROR, "ppt, in flv_read_packet, go to flv_read_metabody.\n");
                 type = flv_read_metabody(s, next);
                 if (type == 0 && dts == 0 || type < 0 || type == TYPE_UNKNOWN) {
                     if (type < 0 && flv->validate_count &&
@@ -1061,9 +1071,10 @@ skip:
 
         if ((s->pb->seekable & AVIO_SEEKABLE_NORMAL) &&
             ((flags & FLV_VIDEO_FRAMETYPE_MASK) == FLV_FRAME_KEY ||
-              stream_type == FLV_STREAM_TYPE_AUDIO))
+              stream_type == FLV_STREAM_TYPE_AUDIO)){
+            av_log(NULL, AV_LOG_ERROR, "ppt, in flv_read_packet, go to av_add_index_entry.\n");
             av_add_index_entry(st, pos, dts, size, 0, AVINDEX_KEYFRAME);
-
+        }
         if (  (st->discard >= AVDISCARD_NONKEY && !((flags & FLV_VIDEO_FRAMETYPE_MASK) == FLV_FRAME_KEY || (stream_type == FLV_STREAM_TYPE_AUDIO)))
             ||(st->discard >= AVDISCARD_BIDIR  &&  ((flags & FLV_VIDEO_FRAMETYPE_MASK) == FLV_FRAME_DISP_INTER && (stream_type == FLV_STREAM_TYPE_VIDEO)))
             || st->discard >= AVDISCARD_ALL
@@ -1175,6 +1186,8 @@ retry_duration:
                 dts = pts = AV_NOPTS_VALUE;
             }
         }
+	    av_log(NULL, AV_LOG_INFO, "ppt, in flv_read_packet, type: %d, st->codecpar->extradata: %d, st->codecpar->codec_id: %x.\n",
+	        type, !!st->codecpar->extradata, st->codecpar->codec_id);
         if (type == 0 && (!st->codecpar->extradata || st->codecpar->codec_id == AV_CODEC_ID_AAC ||
             st->codecpar->codec_id == AV_CODEC_ID_H264)) {
             AVDictionaryEntry *t;

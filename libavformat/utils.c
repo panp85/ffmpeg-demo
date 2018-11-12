@@ -3604,7 +3604,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
     }
 
     if (ic->pb)
-        av_log(ic, AV_LOG_DEBUG, "Before avformat_find_stream_info() pos: %"PRId64" bytes read:%"PRId64" seeks:%d nb_streams:%d\n",
+        av_log(ic, AV_LOG_ERROR, "ppt, avformat_find_stream_info, in Before avformat_find_stream_info() pos: %"PRId64" bytes read:%"PRId64" seeks:%d nb_streams:%d\n",
                avio_tell(ic->pb), ic->pb->bytes_read, ic->pb->seek_count, ic->nb_streams);
 
     for (i = 0; i < ic->nb_streams; i++) {
@@ -3656,7 +3656,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
             goto find_stream_info_err;
         if (st->request_probe <= 0)
             st->internal->avctx_inited = 1;
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in avformat_find_stream_info, go to find_probe_decoder, st->codecpar->codec_id: %d.\n", 
+            st->codecpar->codec_id);
         codec = find_probe_decoder(ic, st, st->codecpar->codec_id);
 
         /* Force thread count to 1 since the H.264 decoder will not extract
@@ -3717,6 +3718,10 @@ FF_ENABLE_DEPRECATION_WARNINGS
 					st->id, st->codec->codec_id);
                 break;
             }
+			else{
+				av_log(NULL, AV_LOG_ERROR, 
+					"ppt, in avformat_find_stream_info, has_codec_parameters yes.\n");
+			}
             /* If the timebase is coarse (like the usual millisecond precision
              * of mkv), we need to analyze more frames to reliably arrive at
              * the correct fps. */
