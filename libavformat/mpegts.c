@@ -1995,6 +1995,7 @@ static void pmt_cb(MpegTSFilter *filter, const uint8_t *section, int section_len
     if (pcr_pid < 0)
         return;
     pcr_pid &= 0x1fff;
+	av_log(NULL, AV_LOG_ERROR, "ppt, in pmt_cb, go to add_pid_to_pmt, h->id, pcr_pid: %d, %d.\n", h->id, pcr_pid);
     add_pid_to_pmt(ts, h->id, pcr_pid);
     set_pcr_pid(ts->stream, h->id, pcr_pid);
 
@@ -2041,7 +2042,7 @@ static void pmt_cb(MpegTSFilter *filter, const uint8_t *section, int section_len
     for (;;) {
         st = 0;
         pes = NULL;
-        stream_type = get8(&p, p_end);
+        stream_type = get8(&p, p_end);//流类型：视频、音频。
         if (stream_type < 0)
             break;
         pid = get16(&p, p_end);
@@ -2050,7 +2051,7 @@ static void pmt_cb(MpegTSFilter *filter, const uint8_t *section, int section_len
         pid &= 0x1fff;
         if (pid == ts->current_pid)
             goto out;
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in pmt_cb, pid: %d, ts->pids[%d]: %d.\n", pid, pid, !!ts->pids[pid]);
         /* now create stream */
         if (ts->pids[pid] && ts->pids[pid]->type == MPEGTS_PES) {
             pes = ts->pids[pid]->u.pes_filter.opaque;
@@ -2093,7 +2094,7 @@ static void pmt_cb(MpegTSFilter *filter, const uint8_t *section, int section_len
 
         if (pes && !pes->stream_type)
             mpegts_set_stream_info(st, pes, stream_type, prog_reg_desc);
-
+        av_log(NULL, AV_LOG_ERROR, "ppt, in pmt_cb, go to add_pid_to_pmt, h->id, pid: %d, %d.\n", h->id, pid);
         add_pid_to_pmt(ts, h->id, pid);
 
         av_program_add_stream_index(ts->stream, h->id, st->index);
@@ -2167,7 +2168,7 @@ static void pat_cb(MpegTSFilter *filter, const uint8_t *section, int section_len
         if (pmt_pid == ts->current_pid)
             break;
 
-        av_log(ts->stream, AV_LOG_TRACE, "sid=0x%x pid=0x%x\n", sid, pmt_pid);
+        av_log(ts->stream, AV_LOG_ERROR, "ppt, in pat_cb, sid=0x%x pid=0x%x\n", sid, pmt_pid);
 
         if (sid == 0x0000) {
             /* NIT info */

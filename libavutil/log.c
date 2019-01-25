@@ -297,6 +297,27 @@ int av_log_format_line2(void *ptr, int level, const char *fmt, va_list vl,
     return ret;
 }
 
+static char *
+fmttime (time_t t, const char *fmt)
+{
+  static char output[32];
+  struct tm *tm = localtime(&t);
+  if (!tm)
+    abort ();
+  if (!strftime(output, sizeof(output), fmt, tm))
+    abort ();
+  return output;
+}
+
+
+char *
+datetime_str ()
+{
+  return fmttime(time (NULL), "%Y-%m-%d %H:%M:%S ");
+}
+
+
+
 void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl)
 {
     static int print_prefix = 1;
@@ -318,7 +339,7 @@ void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl)
     ff_mutex_lock(&mutex);
 
     format_line(ptr, level, fmt, vl, part, &print_prefix, type);
-    snprintf(line, sizeof(line), "%s%s%s%s", part[0].str, part[1].str, part[2].str, part[3].str);
+    snprintf(line, sizeof(line), "%s %s%s%s%s", datetime_str(), part[0].str, part[1].str, part[2].str, part[3].str);
 
 #if HAVE_ISATTY
     if (!is_atty)
@@ -337,6 +358,8 @@ void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl)
         count = 0;
     }
     strcpy(prev, line);
+	sanitize(datetime_str());
+	colored_fputs(type[0], 0, datetime_str());
     sanitize(part[0].str);
     colored_fputs(type[0], 0, part[0].str);
     sanitize(part[1].str);
