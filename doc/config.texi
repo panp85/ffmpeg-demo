@@ -20,9 +20,9 @@
 @c @set arch-tilegx no
 @c @set arch-tilepro no
 @c @set arch-tomi no
-@c @set arch-x86 no
+@set arch-x86 yes
 @c @set arch-x86-32 no
-@c @set arch-x86-64 no
+@set arch-x86-64 yes
 @c @set have-armv5te no
 @c @set have-armv6 no
 @c @set have-armv6t2 no
@@ -37,25 +37,25 @@
 @c @set have-power8 no
 @c @set have-ppc4xx no
 @c @set have-vsx no
-@c @set have-aesni no
-@c @set have-amd3dnow no
-@c @set have-amd3dnowext no
-@c @set have-avx no
-@c @set have-avx2 no
-@c @set have-avx512 no
-@c @set have-fma3 no
-@c @set have-fma4 no
-@c @set have-mmx no
-@c @set have-mmxext no
-@c @set have-sse no
-@c @set have-sse2 no
-@c @set have-sse3 no
-@c @set have-sse4 no
-@c @set have-sse42 no
-@c @set have-ssse3 no
-@c @set have-xop no
-@c @set have-cpunop no
-@c @set have-i686 no
+@set have-aesni yes
+@set have-amd3dnow yes
+@set have-amd3dnowext yes
+@set have-avx yes
+@set have-avx2 yes
+@set have-avx512 yes
+@set have-fma3 yes
+@set have-fma4 yes
+@set have-mmx yes
+@set have-mmxext yes
+@set have-sse yes
+@set have-sse2 yes
+@set have-sse3 yes
+@set have-sse4 yes
+@set have-sse42 yes
+@set have-ssse3 yes
+@set have-xop yes
+@set have-cpunop yes
+@set have-i686 yes
 @c @set have-mipsfpu no
 @c @set have-mips32r2 no
 @c @set have-mips32r5 no
@@ -82,23 +82,23 @@
 @c @set have-power8-external no
 @c @set have-ppc4xx-external no
 @c @set have-vsx-external no
-@c @set have-aesni-external no
-@c @set have-amd3dnow-external no
-@c @set have-amd3dnowext-external no
-@c @set have-avx-external no
-@c @set have-avx2-external no
+@set have-aesni-external yes
+@set have-amd3dnow-external yes
+@set have-amd3dnowext-external yes
+@set have-avx-external yes
+@set have-avx2-external yes
 @c @set have-avx512-external no
-@c @set have-fma3-external no
-@c @set have-fma4-external no
-@c @set have-mmx-external no
-@c @set have-mmxext-external no
-@c @set have-sse-external no
-@c @set have-sse2-external no
-@c @set have-sse3-external no
-@c @set have-sse4-external no
-@c @set have-sse42-external no
-@c @set have-ssse3-external no
-@c @set have-xop-external no
+@set have-fma3-external yes
+@set have-fma4-external yes
+@set have-mmx-external yes
+@set have-mmxext-external yes
+@set have-sse-external yes
+@set have-sse2-external yes
+@set have-sse3-external yes
+@set have-sse4-external yes
+@set have-sse42-external yes
+@set have-ssse3-external yes
+@set have-xop-external yes
 @c @set have-cpunop-external no
 @c @set have-i686-external no
 @c @set have-mipsfpu-external no
@@ -127,23 +127,23 @@
 @c @set have-power8-inline no
 @c @set have-ppc4xx-inline no
 @c @set have-vsx-inline no
-@c @set have-aesni-inline no
-@c @set have-amd3dnow-inline no
-@c @set have-amd3dnowext-inline no
-@c @set have-avx-inline no
-@c @set have-avx2-inline no
-@c @set have-avx512-inline no
-@c @set have-fma3-inline no
-@c @set have-fma4-inline no
-@c @set have-mmx-inline no
-@c @set have-mmxext-inline no
-@c @set have-sse-inline no
-@c @set have-sse2-inline no
-@c @set have-sse3-inline no
-@c @set have-sse4-inline no
-@c @set have-sse42-inline no
-@c @set have-ssse3-inline no
-@c @set have-xop-inline no
+@set have-aesni-inline yes
+@set have-amd3dnow-inline yes
+@set have-amd3dnowext-inline yes
+@set have-avx-inline yes
+@set have-avx2-inline yes
+@set have-avx512-inline yes
+@set have-fma3-inline yes
+@set have-fma4-inline yes
+@set have-mmx-inline yes
+@set have-mmxext-inline yes
+@set have-sse-inline yes
+@set have-sse2-inline yes
+@set have-sse3-inline yes
+@set have-sse4-inline yes
+@set have-sse42-inline yes
+@set have-ssse3-inline yes
+@set have-xop-inline yes
 @c @set have-cpunop-inline no
 @c @set have-i686-inline no
 @c @set have-mipsfpu-inline no
@@ -158,14 +158,14 @@
 @c @set have-loongson2-inline no
 @c @set have-loongson3-inline no
 @c @set have-mmi-inline no
-@c @set have-aligned-stack no
-@c @set have-fast-64bit no
-@c @set have-fast-clz no
-@c @set have-fast-cmov no
+@set have-aligned-stack yes
+@set have-fast-64bit yes
+@set have-fast-clz yes
+@set have-fast-cmov yes
 @set have-local-aligned yes
-@c @set have-simd-align-16 no
-@c @set have-simd-align-32 no
-@c @set have-simd-align-64 no
+@set have-simd-align-16 yes
+@set have-simd-align-32 yes
+@set have-simd-align-64 yes
 @c @set have-atomic-cas-ptr no
 @c @set have-machine-rw-barrier no
 @c @set have-memorybarrier no
@@ -177,9 +177,9 @@
 @c @set have-cexp no
 @set have-inline-asm yes
 @set have-symver yes
-@c @set have-x86asm no
+@set have-x86asm yes
 @c @set have-bigendian no
-@c @set have-fast-unaligned no
+@set have-fast-unaligned yes
 @set have-arpa-inet-h yes
 @set have-asm-types-h yes
 @c @set have-cdio-paranoia-h no
@@ -318,7 +318,7 @@
 @c @set have-as-object-arch no
 @c @set have-asm-mod-q no
 @c @set have-blocks-extension no
-@c @set have-ebp-available no
+@set have-ebp-available yes
 @set have-ebx-available yes
 @c @set have-gnu-as no
 @c @set have-gnu-windres no
@@ -342,14 +342,14 @@
 @set have-struct-msghdr-msg-flags yes
 @set have-struct-pollfd yes
 @set have-struct-rusage-ru-maxrss yes
-@set have-struct-sctp-event-subscribe yes
+@c @set have-struct-sctp-event-subscribe no
 @set have-struct-sockaddr-in6 yes
 @c @set have-struct-sockaddr-sa-len no
 @set have-struct-sockaddr-storage yes
 @set have-struct-stat-st-mtim-tv-nsec yes
 @set have-struct-v4l2-frmivalenum-discrete yes
-@set have-makeinfo yes
-@set have-makeinfo-html yes
+@c @set have-makeinfo no
+@c @set have-makeinfo-html no
 @c @set have-opencl-d3d11 no
 @c @set have-opencl-drm-arm no
 @c @set have-opencl-drm-beignet no
@@ -360,10 +360,10 @@
 @set have-pod2man yes
 @c @set have-texi2html no
 @set config-doc yes
-@set config-htmlpages yes
+@c @set config-htmlpages no
 @set config-manpages yes
 @set config-podpages yes
-@set config-txtpages yes
+@c @set config-txtpages no
 @set config-avio-dir-cmd-example yes
 @set config-avio-reading-example yes
 @set config-decode-audio-example yes
@@ -395,7 +395,7 @@
 @set config-libx264 yes
 @c @set config-libx265 no
 @c @set config-libxavs no
-@set config-libxvid yes
+@c @set config-libxvid no
 @c @set config-decklink no
 @c @set config-libndi-newtek no
 @c @set config-libfdk-aac no
@@ -470,16 +470,16 @@
 @set config-alsa yes
 @c @set config-appkit no
 @c @set config-avfoundation no
-@set config-bzlib yes
+@c @set config-bzlib no
 @c @set config-coreimage no
 @set config-iconv yes
 @set config-libxcb yes
-@set config-libxcb-shm yes
+@c @set config-libxcb-shm no
 @set config-libxcb-shape yes
 @set config-libxcb-xfixes yes
 @c @set config-lzma no
 @c @set config-schannel no
-@c @set config-sdl2 no
+@set config-sdl2 yes
 @c @set config-securetransport no
 @c @set config-sndio no
 @set config-xlib yes
@@ -503,7 +503,7 @@
 @c @set config-vaapi no
 @c @set config-vdpau no
 @c @set config-videotoolbox no
-@set config-v4l2-m2m yes
+@c @set config-v4l2-m2m no
 @c @set config-xvmc no
 @c @set config-ftrapv no
 @c @set config-gray no
@@ -516,8 +516,8 @@
 @set config-static yes
 @set config-swscale-alpha yes
 @set config-gpl yes
-@set config-nonfree yes
-@set config-version3 yes
+@c @set config-nonfree no
+@c @set config-version3 no
 @set config-avcodec yes
 @set config-avdevice yes
 @set config-avfilter yes
@@ -527,14 +527,14 @@
 @set config-postproc yes
 @set config-swresample yes
 @set config-swscale yes
-@c @set config-ffplay no
+@set config-ffplay yes
 @set config-ffprobe yes
 @set config-ffmpeg yes
 @set config-dct yes
 @set config-dwt yes
 @set config-error-resilience yes
 @set config-faan yes
-@c @set config-fast-unaligned no
+@set config-fast-unaligned yes
 @set config-fft yes
 @set config-lsp yes
 @set config-lzo yes
@@ -587,7 +587,7 @@
 @set config-frame-thread-encoder yes
 @set config-g722dsp yes
 @set config-golomb yes
-@set config-gplv3 yes
+@c @set config-gplv3 no
 @set config-h263dsp yes
 @set config-h264chroma yes
 @set config-h264dsp yes
@@ -753,10 +753,10 @@
 @set config-h263-decoder yes
 @set config-h263i-decoder yes
 @set config-h263p-decoder yes
-@set config-h263-v4l2m2m-decoder yes
+@c @set config-h263-v4l2m2m-decoder no
 @set config-h264-decoder yes
 @c @set config-h264-crystalhd-decoder no
-@set config-h264-v4l2m2m-decoder yes
+@c @set config-h264-v4l2m2m-decoder no
 @c @set config-h264-mediacodec-decoder no
 @c @set config-h264-mmal-decoder no
 @c @set config-h264-qsv-decoder no
@@ -796,13 +796,13 @@
 @set config-mpeg2video-decoder yes
 @set config-mpeg4-decoder yes
 @c @set config-mpeg4-crystalhd-decoder no
-@set config-mpeg4-v4l2m2m-decoder yes
+@c @set config-mpeg4-v4l2m2m-decoder no
 @c @set config-mpeg4-mmal-decoder no
 @set config-mpegvideo-decoder yes
-@set config-mpeg1-v4l2m2m-decoder yes
+@c @set config-mpeg1-v4l2m2m-decoder no
 @c @set config-mpeg2-mmal-decoder no
 @c @set config-mpeg2-crystalhd-decoder no
-@set config-mpeg2-v4l2m2m-decoder yes
+@c @set config-mpeg2-v4l2m2m-decoder no
 @c @set config-mpeg2-qsv-decoder no
 @c @set config-mpeg2-mediacodec-decoder no
 @set config-msa1-decoder yes
@@ -895,7 +895,7 @@
 @set config-vc1image-decoder yes
 @c @set config-vc1-mmal-decoder no
 @c @set config-vc1-qsv-decoder no
-@set config-vc1-v4l2m2m-decoder yes
+@c @set config-vc1-v4l2m2m-decoder no
 @set config-vcr1-decoder yes
 @set config-vmdvideo-decoder yes
 @set config-vmnc-decoder yes
@@ -907,7 +907,7 @@
 @set config-vp7-decoder yes
 @set config-vp8-decoder yes
 @c @set config-vp8-rkmpp-decoder no
-@set config-vp8-v4l2m2m-decoder yes
+@c @set config-vp8-v4l2m2m-decoder no
 @set config-vp9-decoder yes
 @c @set config-vp9-rkmpp-decoder no
 @c @set config-vp9-v4l2m2m-decoder no
@@ -1360,14 +1360,14 @@
 @set config-libx264rgb-encoder yes
 @c @set config-libx265-encoder no
 @c @set config-libxavs-encoder no
-@set config-libxvid-encoder yes
-@set config-h263-v4l2m2m-encoder yes
+@c @set config-libxvid-encoder no
+@c @set config-h263-v4l2m2m-encoder no
 @c @set config-libopenh264-encoder no
 @c @set config-h264-amf-encoder no
 @c @set config-h264-nvenc-encoder no
 @c @set config-h264-omx-encoder no
 @c @set config-h264-qsv-encoder no
-@set config-h264-v4l2m2m-encoder yes
+@c @set config-h264-v4l2m2m-encoder no
 @c @set config-h264-vaapi-encoder no
 @c @set config-h264-videotoolbox-encoder no
 @c @set config-nvenc-encoder no
@@ -1384,8 +1384,8 @@
 @c @set config-mjpeg-vaapi-encoder no
 @c @set config-mpeg2-qsv-encoder no
 @c @set config-mpeg2-vaapi-encoder no
-@set config-mpeg4-v4l2m2m-encoder yes
-@set config-vp8-v4l2m2m-encoder yes
+@c @set config-mpeg4-v4l2m2m-encoder no
+@c @set config-vp8-v4l2m2m-encoder no
 @c @set config-vp8-vaapi-encoder no
 @c @set config-vp9-vaapi-encoder no
 @c @set config-h263-vaapi-hwaccel no
@@ -1512,10 +1512,10 @@
 @c @set config-opengl-outdev no
 @set config-oss-outdev yes
 @c @set config-pulse-outdev no
-@c @set config-sdl2-outdev no
+@set config-sdl2-outdev yes
 @c @set config-sndio-outdev no
 @set config-v4l2-outdev yes
-@c @set config-xv-outdev no
+@set config-xv-outdev yes
 @set config-abench-filter yes
 @set config-acompressor-filter yes
 @set config-acontrast-filter yes
@@ -2363,7 +2363,7 @@
 @c @set config-rtmpte-protocol no
 @c @set config-rtmpts-protocol no
 @set config-rtp-protocol yes
-@set config-sctp-protocol yes
+@c @set config-sctp-protocol no
 @set config-srtp-protocol yes
 @set config-subfile-protocol yes
 @set config-tee-protocol yes
