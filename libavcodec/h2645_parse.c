@@ -247,15 +247,21 @@ static int h264_parse_nal_header(H2645NAL *nal, void *logctx)
     return 1;
 }
 
+extern void av_log_default_callback_with_notime(void* ptr, int level, const char* fmt, va_list vl);
+
+
 static int find_next_start_code(const uint8_t *buf, const uint8_t *next_avc)
 {
     int i = 0;
     av_log(NULL, AV_LOG_INFO, "h2645 ppt, in find_next_start_code, buf:\n");
+	av_log_set_callback(av_log_default_callback_with_notime);
 	for(i = 0; buf + i < next_avc; i++)
 	{
 	    av_log(NULL, AV_LOG_INFO, "%2x", buf[i]);
 	}
+	
 	av_log(NULL, AV_LOG_INFO, "\n");
+	av_log_set_callback(av_log_default_callback);
     if (buf + 3 >= next_avc)
         return next_avc - buf;
 	i = 0;

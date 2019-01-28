@@ -688,7 +688,7 @@ static int udp_open(URLContext *h, const char *uri, int flags)
     socklen_t len;
     int i, num_include_sources = 0, num_exclude_sources = 0;
     char *include_sources[32], *exclude_sources[32];
-
+    av_log(NULL, AV_LOG_ERROR, "ppt, in udp_open, uri: %s.\n", uri);
     h->is_streamed = 1;
 
     is_output = !(flags & AVIO_FLAG_READ);
@@ -811,7 +811,7 @@ static int udp_open(URLContext *h, const char *uri, int flags)
 
     if ((s->is_multicast || s->local_port <= 0) && (h->flags & AVIO_FLAG_READ))
         s->local_port = port;
-
+    av_log(NULL, AV_LOG_ERROR, "ppt, in udp_open, localaddr: %s.\n", localaddr);
     if (localaddr[0])
         udp_fd = udp_socket_create(h, &my_addr, &len, localaddr);
     else

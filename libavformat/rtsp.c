@@ -1403,8 +1403,8 @@ int ff_rtsp_send_cmd_with_content(AVFormatContext *s,
 retry:
     cur_auth_type = rt->auth_state.auth_type;
 	av_log(NULL, AV_LOG_ERROR, 
-		"ppt, in ff_rtsp_send_cmd_with_content, go to rtsp_send_cmd_with_content_async, method: %s, header: %s.\n",
-		method, header);
+		"ppt, in ff_rtsp_send_cmd_with_content, go to rtsp_send_cmd_with_content_async, method: %s, url: %s, header: %s.\n",
+		method, url, header);
     if ((ret = rtsp_send_cmd_with_content_async(s, method, url, header,
                                                 send_content,
                                                 send_content_length)))
