@@ -281,6 +281,7 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
     GetByteContext bc;
     int consumed, ret = 0;
     int next_avc = is_nalff ? 0 : length;
+	av_log(NULL, AV_LOG_INFO, "ppt, in ff_h2645_packet_split, is_nalff: %d, next_avc: %d\n", is_nalff, next_avc);
     int64_t padding = small_padding ? 0 : MAX_MBPAIR_SIZE;
 	int i  =0;
 
@@ -297,6 +298,7 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
         int skip_trailing_zeros = 1;
 
         if (bytestream2_tell(&bc) == next_avc) {
+			av_log(NULL, AV_LOG_INFO, "ppt, in ff_h2645_packet_split, bytestream2_tell(&bc) == next_avc.\n");
             int i = 0;
             extract_length = get_nalsize(nal_length_size,
                                          bc.buffer, bytestream2_get_bytes_left(&bc), &i, logctx);
@@ -357,7 +359,7 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
             pkt->nals_allocated = new_size;
         }
         nal = &pkt->nals[pkt->nb_nals];
-		av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split,1 bc.buffer: %2x%2x%2x.\n", bc.buffer[0], bc.buffer[1], bc.buffer[2]);
+		//av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split,1 bc.buffer: %2x%2x%2x.\n", bc.buffer[0], bc.buffer[1], bc.buffer[2]);
         consumed = ff_h2645_extract_rbsp(bc.buffer, extract_length, &pkt->rbsp, nal, small_padding);
         if (consumed < 0)
             return consumed;
@@ -376,21 +378,21 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
         if (bytestream2_get_bytes_left(&bc) >= 4 &&
             bytestream2_peek_be32(&bc) == 0x000001E0)
             skip_trailing_zeros = 0;
-		av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split, 1 nal->data:\n");
+		//av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split, 1 nal->data:\n");
 		/*for(i = 0; i < nal->size; i++)
 		{
 			av_log(NULL, AV_LOG_INFO, "%02x", nal->data[i]);
 		}*/
-		av_log(NULL, AV_LOG_INFO, "\n");
+		//av_log(NULL, AV_LOG_INFO, "\n");
         nal->size_bits = get_bit_length(nal, skip_trailing_zeros);
-		av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split, 2 nal->data:\n");
+		//av_log(NULL, AV_LOG_INFO, "h2645 ppt, in ff_h2645_packet_split, 2 nal->data:\n");
 		/*
 		for(i = 0; i < nal->size_bits; i++)
 		{
 			av_log(NULL, AV_LOG_INFO,"%02x",  nal->data[i]);
 		}
 		*/
-		av_log(NULL, AV_LOG_INFO, "\n");
+		//av_log(NULL, AV_LOG_INFO, "\n");
         ret = init_get_bits(&nal->gb, nal->data, nal->size_bits);
         if (ret < 0)
             return ret;

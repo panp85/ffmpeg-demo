@@ -539,6 +539,7 @@ static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block, int *seria
 {
     MyAVPacketList *pkt1;
     int ret;
+	AVPacket *pkt_bak = NULL;
 
     SDL_LockMutex(q->mutex);
 
@@ -557,16 +558,29 @@ static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block, int *seria
             q->size -= pkt1->pkt.size + sizeof(*pkt1);
             q->duration -= pkt1->pkt.duration;
             *pkt = pkt1->pkt;
+			
+			pkt_bak = pkt;
+			
             if (serial)
                 *serial = pkt1->serial;
             av_free(pkt1);
             ret = 1;
-            break;
+            //break;
         } else if (!block) {
             ret = 0;
             break;
         } else {
-            SDL_CondWait(q->cond, q->mutex);
+        	if(pkt_bak)
+        	{
+       			pkt = pkt_bak;
+				ret = 1;
+				break;
+				
+        	}else{
+        		SDL_CondWait(q->cond, q->mutex);
+        	}
+			
+            //SDL_CondWait(q->cond, q->mutex);
         }
     }
     SDL_UnlockMutex(q->mutex);
@@ -1342,13 +1356,17 @@ static void video_display(VideoState *is)
 {
     if (!is->width)
         video_open(is);
-
+	av_log(NULL, AV_LOG_INFO, "ppt, in video_display, go in.\n");
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    if (is->audio_st && is->show_mode != SHOW_MODE_VIDEO)
+    if (is->audio_st && is->show_mode != SHOW_MODE_VIDEO){
+		av_log(NULL, AV_LOG_INFO, "ppt, in video_display, go to video_audio_display.\n");
         video_audio_display(is);
-    else if (is->video_st)
+    }
+    else if (is->video_st){
+		av_log(NULL, AV_LOG_INFO, "ppt, in video_display, go to video_image_display.\n");
         video_image_display(is);
+    }
     SDL_RenderPresent(renderer);
 }
 
@@ -1558,7 +1576,7 @@ static void video_refresh(void *opaque, double *remaining_time)
     double time;
 
     Frame *sp, *sp2;
-
+	av_log(NULL, AV_LOG_INFO, "ppt, in video_refresh, go in.\n");
     if (!is->paused && get_master_sync_type(is) == AV_SYNC_EXTERNAL_CLOCK && is->realtime)
         check_external_clock_speed(is);
 
@@ -1574,8 +1592,12 @@ static void video_refresh(void *opaque, double *remaining_time)
     if (is->video_st) {
 retry:
         if (frame_queue_nb_remaining(&is->pictq) == 0) {
+			av_log(NULL, AV_LOG_INFO, "ppt, in video_refresh, no picture.\n");
             // nothing to do, no picture to display in the queue
         } else {
+        
+			av_log(NULL, AV_LOG_INFO, "ppt, in video_refresh, picture yes, frame_queue_nb_remaining: %d.\n", 
+				frame_queue_nb_remaining(&is->pictq));
             double last_duration, duration, delay;
             Frame *vp, *lastvp;
 
@@ -2131,6 +2153,7 @@ static int video_thread(void *arg)
 
     for (;;) {
         ret = get_video_frame(is, frame);
+		av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, get_video_frame ret:%d.\n", ret);
         if (ret < 0)
             goto the_end;
         if (!ret)
@@ -2175,6 +2198,7 @@ static int video_thread(void *arg)
             is->frame_last_returned_time = av_gettime_relative() / 1000000.0;
 
             ret = av_buffersink_get_frame_flags(filt_out, frame, 0);
+			av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, av_buffersink_get_frame_flags ret:%d.\n", ret);
             if (ret < 0) {
                 if (ret == AVERROR_EOF)
                     is->viddec.finished = is->viddec.pkt_serial;
@@ -2189,6 +2213,7 @@ static int video_thread(void *arg)
 #endif
             duration = (frame_rate.num && frame_rate.den ? av_q2d((AVRational){frame_rate.den, frame_rate.num}) : 0);
             pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
+			av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, go to queue_picture, pts: %lld.\n", pts);
             ret = queue_picture(is, frame, pts, duration, frame->pkt_pos, is->viddec.pkt_serial);
             av_frame_unref(frame);
 #if CONFIG_AVFILTER
@@ -3016,9 +3041,11 @@ static int read_thread(void *arg)
                 (double)(start_time != AV_NOPTS_VALUE ? start_time : 0) / 1000000
                 <= ((double)duration / 1000000);
         if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
+			av_log(NULL, AV_LOG_INFO, "ppt, in read_thread, audio,pkt->stream_index:%d, pkt->dts,pkt->pts: %lld. %lld", pkt->stream_index,pkt->dts,pkt->pts);
             packet_queue_put(&is->audioq, pkt);
         } else if (pkt->stream_index == is->video_stream && pkt_in_play_range
                    && !(is->video_st->disposition & AV_DISPOSITION_ATTACHED_PIC)) {
+            av_log(NULL, AV_LOG_INFO, "ppt, in read_thread, video,pkt->stream_index:%d, pkt->dts,pkt->pts: %lld. %lld", pkt->stream_index, pkt->dts,pkt->pts);
             packet_queue_put(&is->videoq, pkt);
         } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
             packet_queue_put(&is->subtitleq, pkt);
