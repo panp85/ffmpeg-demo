@@ -648,6 +648,7 @@ static int decode_nal_units(H264Context *h, const uint8_t *buf, int buf_size)
         h->nal_unit_type = nal->type;
 
         err = 0;
+		av_log(NULL, AV_LOG_INFO, "ppt, in decode_nal_units, nal->type: %d.\n", nal->type);
         switch (nal->type) {
         case H264_NAL_IDR_SLICE:
             if ((nal->data[1] & 0xFC) == 0x98) {

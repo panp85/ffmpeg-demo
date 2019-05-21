@@ -701,7 +701,7 @@ static int apply_cropping(AVCodecContext *avctx, AVFrame *frame)
 
     if (!avctx->apply_cropping)
         return 0;
-
+	av_log(NULL, AV_LOG_INFO, "ppt, in apply_cropping, go to av_frame_apply_cropping.\n");
     return av_frame_apply_cropping(frame, avctx->flags & AV_CODEC_FLAG_UNALIGNED ?
                                           AV_FRAME_CROP_UNALIGNED : 0);
 }
@@ -721,11 +721,18 @@ int attribute_align_arg avcodec_receive_frame(AVCodecContext *avctx, AVFrame *fr
         return ret;
 
     if (avci->buffer_frame->buf[0]) {
+		av_log(NULL, AV_LOG_INFO, "ppt, in avcodec_receive_frame, codec_type:%d, go to av_frame_move_ref.\n", 
+			avctx->codec_type);
         av_frame_move_ref(frame, avci->buffer_frame);
     } else {
+        av_log(NULL, AV_LOG_INFO, 
+			"ppt, in avcodec_receive_frame, codec_type:%d, go to decode_receive_frame_internal.\n", 
+			avctx->codec_type);
         ret = decode_receive_frame_internal(avctx, frame);
-        if (ret < 0)
+        if (ret < 0){
+			av_log(NULL, AV_LOG_INFO, "ppt, in avcodec_receive_frame, return 1.\n");
             return ret;
+        }
     }
 
     if (avctx->codec_type == AVMEDIA_TYPE_VIDEO) {

@@ -875,7 +875,8 @@ int av_frame_apply_cropping(AVFrame *frame, int flags)
     const AVPixFmtDescriptor *desc;
     size_t offsets[4];
     int i;
-
+	av_log(NULL, AV_LOG_INFO, "ppt, in av_frame_apply_cropping, frame_wh: %d, %d.\n", 
+		frame->width, frame->height);
     if (!(frame->width > 0 && frame->height > 0))
         return AVERROR(EINVAL);
 

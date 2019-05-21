@@ -1667,7 +1667,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 st->parser->flags |= PARSER_FLAG_USE_CODEC_TS;
         }
         av_log(NULL, AV_LOG_INFO, 
-            "ffmpet ppt, in read_frame_internal, st->codecpar->codec_id = %x, st->need_parsing,st->parser: %x, %d.\n", 
+            	"ffmpet ppt, in read_frame_internal, st->codecpar->codec_id = %x, st->need_parsing,st->parser: %x, %d.\n", 
             st->codecpar->codec_id, st->need_parsing,!!st->parser);
         if (!st->need_parsing || !st->parser) {
             /* no parsing needed: we just output the packet as is */
@@ -3606,6 +3606,10 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
     if (ic->pb)
         av_log(ic, AV_LOG_ERROR, "ppt, avformat_find_stream_info, in Before avformat_find_stream_info() pos: %"PRId64" bytes read:%"PRId64" seeks:%d nb_streams:%d\n",
                avio_tell(ic->pb), ic->pb->bytes_read, ic->pb->seek_count, ic->nb_streams);
+	else
+		av_log(ic, AV_LOG_ERROR, 
+			"ppt, avformat_find_stream_info, no ic->pb.\n");
+	av_log(ic, AV_LOG_ERROR, "ppt, avformat_find_stream_info, ic->nb_streams: %d.\n", ic->nb_streams);
 
     for (i = 0; i < ic->nb_streams; i++) {
         const AVCodec *codec;

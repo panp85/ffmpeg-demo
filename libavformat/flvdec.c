@@ -117,6 +117,7 @@ static void add_keyframes_index(AVFormatContext *s)
     stream = s->streams[flv->last_keyframe_stream_index];
 
     if (stream->nb_index_entries == 0) {
+		av_log(s, AV_LOG_DEBUG, "ppt, in add_keyframes_index, flv->keyframe_count: %d.\n", flv->keyframe_count);
         for (i = 0; i < flv->keyframe_count; i++) {
             av_log(s, AV_LOG_ERROR, "ppt, in add_keyframes_index, keyframe filepositions = %"PRId64" times = %"PRId64"\n",
                    flv->keyframe_filepositions[i], flv->keyframe_times[i] * 1000);
@@ -707,7 +708,7 @@ static int flv_read_metabody(AVFormatContext *s, int64_t next_pos)
         else if (stream->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
             dstream = stream;
     }
-    av_log(NULL, AV_LOG_INFO, "ppt, in flv_read_metabody, go to amf_parse_object.\n");
+    av_log(NULL, AV_LOG_INFO, "ppt, in flv_read_metabody, go to amf_parse_object, buffer: %s.\n", buffer);
     // parse the second object (we want a mixed array)
     if (amf_parse_object(s, astream, vstream, buffer, next_pos, 0) < 0)
         return -1;
@@ -949,7 +950,7 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
     AVStream *st    = NULL;
     int last = -1;
     int orig_size;
-
+	av_log(NULL, AV_LOG_INFO, "ppt, in flv_read_packet, go in.\n");
 retry:
     /* pkt size is repeated at end. skip it */
         pos  = avio_tell(s->pb);
@@ -1186,7 +1187,8 @@ retry_duration:
                 dts = pts = AV_NOPTS_VALUE;
             }
         }
-	    av_log(NULL, AV_LOG_INFO, "ppt, in flv_read_packet, type: %d, st->codecpar->extradata: %d, st->codecpar->codec_id: %x.\n",
+	    av_log(NULL, AV_LOG_INFO, 
+			"ppt, in flv_read_packet, type: %d, st->codecpar->extradata: %d, st->codecpar->codec_id: %x.\n",
 	        type, !!st->codecpar->extradata, st->codecpar->codec_id);
         if (type == 0 && (!st->codecpar->extradata || st->codecpar->codec_id == AV_CODEC_ID_AAC ||
             st->codecpar->codec_id == AV_CODEC_ID_H264)) {

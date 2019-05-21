@@ -319,7 +319,7 @@ static inline int parse_nal_units(AVCodecParserContext *s,
         nal.type    = get_bits(&nal.gb, 5);
 
         switch (nal.type) {
-        case H264_NAL_SPS:
+        case H264_NAL_SPS://ref: https://blog.csdn.net/leixiaohua1020/article/details/45001033
             ff_h264_decode_seq_parameter_set(&nal.gb, avctx, &p->ps, 0);
             break;
         case H264_NAL_PPS:
@@ -384,7 +384,7 @@ static inline int parse_nal_units(AVCodecParserContext *s,
                 s->key_frame = 1;
 
             p->poc.frame_num = get_bits(&nal.gb, sps->log2_max_frame_num);
-
+			
             s->coded_width  = 16 * sps->mb_width;
             s->coded_height = 16 * sps->mb_height;
             s->width        = s->coded_width  - (sps->crop_right + sps->crop_left);
@@ -393,6 +393,9 @@ static inline int parse_nal_units(AVCodecParserContext *s,
                 s->width  = s->coded_width;
                 s->height = s->coded_height;
             }
+			av_log(NULL, AV_LOG_INFO, 
+				"ppt, in parse_nal_units, s->coded_width, s->coded_height: %d, %d, %d, %d.\n", 
+				s->coded_height, s->coded_height, s->width, s->height);
 
             switch (sps->bit_depth_luma) {
             case 9:

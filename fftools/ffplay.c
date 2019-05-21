@@ -534,6 +534,47 @@ static void packet_queue_start(PacketQueue *q)
     SDL_UnlockMutex(q->mutex);
 }
 
+
+/* return < 0 if aborted, 0 if no packet and > 0 if packet.  */
+static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block, int *serial)
+{
+    MyAVPacketList *pkt1;
+    int ret;
+
+    SDL_LockMutex(q->mutex);
+
+    for (;;) {
+        if (q->abort_request) {
+            ret = -1;
+            break;
+        }
+
+        pkt1 = q->first_pkt;
+        if (pkt1) {
+            q->first_pkt = pkt1->next;
+            if (!q->first_pkt)
+                q->last_pkt = NULL;
+            q->nb_packets--;
+            q->size -= pkt1->pkt.size + sizeof(*pkt1);
+            q->duration -= pkt1->pkt.duration;
+            *pkt = pkt1->pkt;
+            if (serial)
+                *serial = pkt1->serial;
+            av_free(pkt1);
+            ret = 1;
+            break;
+        } else if (!block) {
+            ret = 0;
+            break;
+        } else {
+        	SDL_CondWait(q->cond, q->mutex);
+        }
+    }
+    SDL_UnlockMutex(q->mutex);
+    return ret;
+}
+
+#if 0
 /* return < 0 if aborted, 0 if no packet and > 0 if packet.  */
 static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block, int *serial)
 {
@@ -586,6 +627,7 @@ static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block, int *seria
     SDL_UnlockMutex(q->mutex);
     return ret;
 }
+#endif
 
 static void decoder_init(Decoder *d, AVCodecContext *avctx, PacketQueue *queue, SDL_cond *empty_queue_cond) {
     memset(d, 0, sizeof(Decoder));
@@ -851,6 +893,7 @@ static int realloc_texture(SDL_Texture **texture, Uint32 new_format, int new_wid
     if (SDL_QueryTexture(*texture, &format, &access, &w, &h) < 0 || new_width != w || new_height != h || new_format != format) {
         void *pixels;
         int pitch;
+		av_log(NULL, AV_LOG_INFO, "ppt, in realloc_texture, new_width: %d, w: %d.\n", new_width, w);
         SDL_DestroyTexture(*texture);
         if (!(*texture = SDL_CreateTexture(renderer, new_format, SDL_TEXTUREACCESS_STREAMING, new_width, new_height)))
             return -1;
@@ -1354,9 +1397,10 @@ static int video_open(VideoState *is)
 /* display the current picture, if any */
 static void video_display(VideoState *is)
 {
-    if (!is->width)
+	av_log(NULL, AV_LOG_INFO, "ppt, in video_display, is->width: %d.\n", is->width);
+   // if (!is->width)
         video_open(is);
-	av_log(NULL, AV_LOG_INFO, "ppt, in video_display, go in.\n");
+	
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
     if (is->audio_st && is->show_mode != SHOW_MODE_VIDEO){
@@ -2153,7 +2197,7 @@ static int video_thread(void *arg)
 
     for (;;) {
         ret = get_video_frame(is, frame);
-		av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, get_video_frame ret:%d.\n", ret);
+		av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, get_video_frame ret:%d.\n",frame->width,  ret);
         if (ret < 0)
             goto the_end;
         if (!ret)
@@ -2213,7 +2257,11 @@ static int video_thread(void *arg)
 #endif
             duration = (frame_rate.num && frame_rate.den ? av_q2d((AVRational){frame_rate.den, frame_rate.num}) : 0);
             pts = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
-			av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, go to queue_picture, pts: %lld.\n", pts);
+			av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, go to queue_picture, pts: %f, width: %d.\n",
+				pts, frame->width);
+			
+			/*av_log(NULL, AV_LOG_INFO, "ppt, in video_thread, go to queue_picture, pts: %f.\n",
+				pts);*/
             ret = queue_picture(is, frame, pts, duration, frame->pkt_pos, is->viddec.pkt_serial);
             av_frame_unref(frame);
 #if CONFIG_AVFILTER
@@ -2396,6 +2444,7 @@ static int audio_decode_frame(VideoState *is)
         int out_count = (int64_t)wanted_nb_samples * is->audio_tgt.freq / af->frame->sample_rate + 256;
         int out_size  = av_samples_get_buffer_size(NULL, is->audio_tgt.channels, out_count, is->audio_tgt.fmt, 0);
         int len2;
+		av_log(NULL, AV_LOG_INFO, "ppt, in audio_decode_frame, out_size: %d.\n", out_size);
         if (out_size < 0) {
             av_log(NULL, AV_LOG_ERROR, "av_samples_get_buffer_size() failed\n");
             return -1;
@@ -2423,6 +2472,7 @@ static int audio_decode_frame(VideoState *is)
         is->audio_buf = is->audio_buf1;
         resampled_data_size = len2 * is->audio_tgt.channels * av_get_bytes_per_sample(is->audio_tgt.fmt);
     } else {
+    	//av_log(NULL, AV_LOG_INFO, "ppt, in audio_decode_frame, is->swr_ctx is null.\n");
         is->audio_buf = af->frame->data[0];
         resampled_data_size = data_size;
     }
@@ -2924,6 +2974,7 @@ static int read_thread(void *arg)
         infinite_buffer = 1;
 
     for (;;) {
+		av_log(NULL, AV_LOG_INFO, "ppt, in read_thread, in for.\n");
         if (is->abort_request)
             break;
         if (is->paused != is->last_paused) {
@@ -3041,11 +3092,11 @@ static int read_thread(void *arg)
                 (double)(start_time != AV_NOPTS_VALUE ? start_time : 0) / 1000000
                 <= ((double)duration / 1000000);
         if (pkt->stream_index == is->audio_stream && pkt_in_play_range) {
-			av_log(NULL, AV_LOG_INFO, "ppt, in read_thread, audio,pkt->stream_index:%d, pkt->dts,pkt->pts: %lld. %lld", pkt->stream_index,pkt->dts,pkt->pts);
+			av_log(NULL, AV_LOG_INFO, "ppt, in read_thread, audio,pkt->stream_index:%d, pkt->dts,pkt->pts: %lld. %lld.\n", pkt->stream_index,pkt->dts,pkt->pts);
             packet_queue_put(&is->audioq, pkt);
         } else if (pkt->stream_index == is->video_stream && pkt_in_play_range
                    && !(is->video_st->disposition & AV_DISPOSITION_ATTACHED_PIC)) {
-            av_log(NULL, AV_LOG_INFO, "ppt, in read_thread, video,pkt->stream_index:%d, pkt->dts,pkt->pts: %lld. %lld", pkt->stream_index, pkt->dts,pkt->pts);
+            av_log(NULL, AV_LOG_INFO, "ppt, in read_thread, video,pkt->stream_index:%d, pkt->dts,pkt->pts: %lld. %lld.\n", pkt->stream_index, pkt->dts,pkt->pts);
             packet_queue_put(&is->videoq, pkt);
         } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
             packet_queue_put(&is->subtitleq, pkt);
@@ -3729,10 +3780,14 @@ int main(int argc, char **argv)
 
     if (!display_disable) {
         int flags = SDL_WINDOW_HIDDEN;
-        if (borderless)
+        if (/*borderless*/1){
+			av_log(NULL, AV_LOG_INFO, "ppt, in main ffplay, SDL_WINDOW_BORDERLESS.\n");
             flags |= SDL_WINDOW_BORDERLESS;
-        else
+        }
+        else{
+			av_log(NULL, AV_LOG_INFO, "ppt, in main ffplay, SDL_WINDOW_RESIZABLE.\n");
             flags |= SDL_WINDOW_RESIZABLE;
+        }
         window = SDL_CreateWindow(program_name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, default_width, default_height, flags);
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
         if (window) {
