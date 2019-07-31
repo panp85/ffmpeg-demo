@@ -281,6 +281,9 @@ void av_log_set_level(int level);
  */
 void av_log_set_callback(void (*callback)(void*, int, const char*, va_list));
 
+void av_log_default_callback_with_notime(void *avcl, int level, const char *fmt,
+                             va_list vl);
+
 /**
  * Default logging callback
  *
