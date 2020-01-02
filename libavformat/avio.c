@@ -103,6 +103,8 @@ static int url_alloc_for_protocol(URLContext **puc, const URLProtocol *up,
     uc->flags           = flags;
     uc->is_streamed     = 0; /* default = not streamed */
     uc->max_packet_size = 0; /* default: stream file */
+    av_log(NULL, AV_LOG_INFO, "ppt, in url_alloc_for_protocol, priv_data_size: %d.\n", 
+        up->priv_data_size);
     if (up->priv_data_size) {
         uc->priv_data = av_mallocz(up->priv_data_size);
         if (!uc->priv_data) {

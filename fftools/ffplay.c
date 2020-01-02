@@ -3788,6 +3788,7 @@ int main(int argc, char **argv)
 			av_log(NULL, AV_LOG_INFO, "ppt, in main ffplay, SDL_WINDOW_RESIZABLE.\n");
             flags |= SDL_WINDOW_RESIZABLE;
         }
+        av_log(NULL, AV_LOG_INFO, "ppt, in main, default_width,default_height: %d, %d.\n", default_width,default_height);
         window = SDL_CreateWindow(program_name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, default_width, default_height, flags);
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
         if (window) {

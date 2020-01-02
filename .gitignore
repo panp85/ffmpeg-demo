@@ -36,3 +36,16 @@
 /lcov/
 /src
 /mapfile
+/test
+/ffbuild
+demo_rtsp2mp4/1.mp4
+ffbuild/config.fate
+ffbuild/config.log
+ffbuild/config.mak
+ffbuild/config.sh
+*.mp4
+*.flv
+*.wav
+/doc
+tests/ref/
+*.log
