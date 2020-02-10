@@ -294,6 +294,7 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
         }
 
         x4->pic.i_pts  = frame->pts;
+		av_log(NULL,AV_LOG_INFO, "ppt, in X264_frame, frame type: %d.\n", frame->pict_type);
 
         switch (frame->pict_type) {
         case AV_PICTURE_TYPE_I:

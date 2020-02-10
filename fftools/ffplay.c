@@ -637,7 +637,7 @@ static void decoder_init(Decoder *d, AVCodecContext *avctx, PacketQueue *queue, 
     d->start_pts = AV_NOPTS_VALUE;
     d->pkt_serial = -1;
 }
-
+static int num_send = 0;
 static int decoder_decode_frame(Decoder *d, AVFrame *frame, AVSubtitle *sub) {
     int ret = AVERROR(EAGAIN);
 
@@ -682,6 +682,9 @@ static int decoder_decode_frame(Decoder *d, AVFrame *frame, AVSubtitle *sub) {
                 }
                 if (ret >= 0)
                     return 1;
+				else{
+					av_log(NULL, AV_LOG_INFO, "ppt, in decoder_decode_frame, ret: %d.\n", ret);
+				}
             } while (ret != AVERROR(EAGAIN));
         }
 
@@ -716,11 +719,15 @@ static int decoder_decode_frame(Decoder *d, AVFrame *frame, AVSubtitle *sub) {
                     ret = got_frame ? 0 : (pkt.data ? AVERROR(EAGAIN) : AVERROR_EOF);
                 }
             } else {
+            	av_log(NULL, AV_LOG_INFO, "ppt, in decoder_decode_frame, go to avcodec_send_packet.\n");
                 if (avcodec_send_packet(d->avctx, &pkt) == AVERROR(EAGAIN)) {
                     av_log(d->avctx, AV_LOG_ERROR, "Receive_frame and send_packet both returned EAGAIN, which is an API violation.\n");
                     d->packet_pending = 1;
                     av_packet_move_ref(&d->pkt, &pkt);
                 }
+				else{
+					num_send++;
+				}
             }
             av_packet_unref(&pkt);
         }

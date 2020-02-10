@@ -993,6 +993,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
             *pnum = st->time_base.num;
             *pden = st->time_base.den;
         } else if (codec_framerate.den * 1000LL > codec_framerate.num) {
+            av_log(NULL, AV_LOG_INFO, "ppt, in ff_compute_frame_duration, codec_framerate: %d/%d.\n",
+                codec_framerate.den, codec_framerate.num);
             av_assert0(st->internal->avctx->ticks_per_frame);
             av_reduce(pnum, pden,
                       codec_framerate.den,
@@ -1530,7 +1532,8 @@ static int parse_packet(AVFormatContext *s, AVPacket *pkt, int stream_index)
 
         if (st->parser->key_frame == -1 && st->parser->pict_type ==AV_PICTURE_TYPE_NONE && (pkt->flags&AV_PKT_FLAG_KEY))
             out_pkt.flags |= AV_PKT_FLAG_KEY;
-        av_log(NULL, AV_LOG_INFO, "parse ppt, in parse_packet, out_pkt.flags = %x.\n", out_pkt.flags);
+        av_log(NULL, AV_LOG_INFO, "parse ppt, in parse_packet, out_pkt.flags = %x, out_pkt.duration: %d.\n", 
+            out_pkt.flags, out_pkt.duration);
         compute_pkt_fields(s, st, st->parser, &out_pkt, next_dts, next_pts);
 
         ret = ff_packet_list_put(&s->internal->parse_queue,
@@ -1603,6 +1606,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
 
         /* update context if required */
         if (st->internal->need_context_update) {
+			av_log(NULL, AV_LOG_INFO, "ppt, in read_frame_internal, need_context_update yes.\n");
             if (avcodec_is_open(st->internal->avctx)) {
                 av_log(s, AV_LOG_DEBUG, "Demuxer context update while decoder is open, closing and trying to re-open\n");
                 avcodec_close(st->internal->avctx);
@@ -1641,13 +1645,15 @@ FF_ENABLE_DEPRECATION_WARNINGS
                    av_ts2str(cur_pkt.dts),
                    cur_pkt.size);
         }
-        if (s->debug & FF_FDEBUG_TS)
-            av_log(s, AV_LOG_DEBUG,
+        // if (s->debug & FF_FDEBUG_TS)
+            av_log(s, AV_LOG_INFO,
                    "ff_read_packet stream=%d, pts=%s, dts=%s, size=%d, duration=%"PRId64", flags=%d\n",
                    cur_pkt.stream_index,
                    av_ts2str(cur_pkt.pts),
                    av_ts2str(cur_pkt.dts),
                    cur_pkt.size, cur_pkt.duration, cur_pkt.flags);
+        av_log(NULL, AV_LOG_INFO,"ppt, in read_frame_internal, pkt->duration: %d.\n", 
+            pkt->duration);
 
         if (st->need_parsing && !st->parser && !(s->flags & AVFMT_FLAG_NOPARSE)) {
 			av_log(NULL, AV_LOG_INFO, "ffmpet ppt, in read_frame_internal, st->codecpar->codec_id = %d, go to av_parser_init.\n", 
@@ -1696,8 +1702,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
             av_packet_unref(&cur_pkt);
         }
 		av_log(NULL, AV_LOG_INFO, 
-            "ffmpet ppt, in read_frame_internal, pkt->pts, pkt->dts: %d, %d.\n", 
-            pkt->pts, pkt->dts);
+            "ffmpet ppt, in read_frame_internal, pkt->pts, pkt->dts, pkt->duration: %d, %d, %d.\n", 
+            pkt->pts, pkt->dts, pkt->duration);
         if (pkt->flags & AV_PKT_FLAG_KEY)
             st->skip_to_keyframe = 0;
         if (st->skip_to_keyframe) {
@@ -1711,7 +1717,9 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
     if (!got_packet && s->internal->parse_queue)
         ret = ff_packet_list_get(&s->internal->parse_queue, &s->internal->parse_queue_end, pkt);
-
+    av_log(NULL, AV_LOG_INFO, 
+            "ffmpet ppt, in read_frame_internal, 2 pkt->pts, pkt->dts, pkt->duration: %d, %d, %d.\n", 
+            pkt->pts, pkt->dts, pkt->duration);
     if (ret >= 0) {
         AVStream *st = s->streams[pkt->stream_index];
         int discard_padding = 0;
@@ -3437,7 +3445,7 @@ void ff_rfps_calculate(AVFormatContext *ic)
             && st->info->duration_count > 2
             && fabs(1.0 / (av_q2d(st->r_frame_rate) * av_q2d(st->time_base)) - st->info->rfps_duration_sum / (double)st->info->duration_count) <= 1.0
             ) {
-            av_log(ic, AV_LOG_DEBUG, "Setting avg frame rate based on r frame rate\n");
+            av_log(ic, AV_LOG_INFO, "ppt, in ff_rfps_calculate, Setting avg frame rate based on r frame rate\n");
             st->avg_frame_rate = st->r_frame_rate;
         }
 
@@ -3718,7 +3726,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
             if (!has_codec_parameters(st, NULL))
             {
                 av_log(NULL, AV_LOG_ERROR, 
-					"ppt, in avformat_find_stream_info, no has_codec_parameters, st->id: %d, codec_id: %d.\n", 
+					"ppt, in avformat_find_stream_info, has_codec_parameters no, st->id: %d, codec_id: %d.\n", 
 					st->id, st->codec->codec_id);
                 break;
             }
@@ -3893,10 +3901,13 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 break;
             }
             if (pkt->duration) {
+                av_log(NULL, AV_LOG_INFO, "ppt, in avformat_find_stream_info, pkt->duration: %d.\n",
+                    pkt->duration);
                 if (avctx->codec_type == AVMEDIA_TYPE_SUBTITLE && pkt->pts != AV_NOPTS_VALUE && pkt->pts >= st->start_time) {
                     st->info->codec_info_duration = FFMIN(pkt->pts - st->start_time, st->info->codec_info_duration + pkt->duration);
-                } else
+                } else{
                     st->info->codec_info_duration += pkt->duration;
+                }
                 st->info->codec_info_duration_fields += st->parser && st->need_parsing && avctx->ticks_per_frame ==2 ? st->parser->repeat_pict + 1 : 2;
             }
         }
@@ -3932,7 +3943,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         st->codec_info_nb_frames++;
         count++;
     }
-
+	av_log(NULL, AV_LOG_INFO, "ppt, in avformat_find_stream_info, st->codec_info_nb_frames: %d.\n", st->codec_info_nb_frames);
     if (eof_reached) {
         int stream_index;
         for (stream_index = 0; stream_index < ic->nb_streams; stream_index++) {

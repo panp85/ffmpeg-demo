@@ -563,6 +563,7 @@ int avfilter_graph_parse_ptr(AVFilterGraph *graph, const char *filters,
         if (filter->nb_inputs == 1 && !curr_inputs && !index) {
             /* First input pad, assume it is "[in]" if not specified */
             const char *tmp = "[in]";
+			av_log(NULL, AV_LOG_INFO, "ppt, in avfilter_graph_parse_ptr, go to parse_inputs, [in].\n");
             if ((ret = parse_inputs(&tmp, &curr_inputs, &open_outputs, log_ctx)) < 0)
                 goto end;
         }

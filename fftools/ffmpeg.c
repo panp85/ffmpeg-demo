@@ -822,6 +822,7 @@ static void close_output_stream(OutputStream *ost)
     }
 }
 
+static int got_frame_end = 0;
 /*
  * Send a single packet to the output, applying any bitstream filters
  * associated with the output stream.  This may result in any number
@@ -857,9 +858,12 @@ static void output_packet(OutputFile *of, AVPacket *pkt,
                 continue;
             } else if (ret == AVERROR_EOF) {
                 eof = 1;
-            } else if (ret < 0)
+            } else if (ret < 0){
                 goto finish;
-
+			}
+			if(eof == 1){
+				got_frame_end++;
+			}
             /* send it to the next filter down the chain or to the muxer */
             if (idx < ost->nb_bitstream_filters) {
                 ret = av_bsf_send_packet(ost->bsf_ctx[idx], eof ? NULL : pkt);
@@ -4814,6 +4818,7 @@ int main(int argc, char **argv)
     current_time = ti = getutime();
     if (transcode() < 0)
         exit_program(1);
+	av_log(NULL,AV_LOG_INFO, "ppt, in output_packet, got_frame_end: %d.\n", got_frame_end);
     ti = getutime() - ti;
     if (do_benchmark) {
         av_log(NULL, AV_LOG_INFO, "bench: utime=%0.3fs\n", ti / 1000000.0);

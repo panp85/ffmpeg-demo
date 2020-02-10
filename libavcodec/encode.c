@@ -272,11 +272,15 @@ int attribute_align_arg avcodec_encode_video2(AVCodecContext *avctx,
         av_log(avctx, AV_LOG_ERROR, "This encoder requires using the avcodec_send_frame() API.\n");
         return AVERROR(ENOSYS);
     }
-
+	av_log(NULL, AV_LOG_INFO, 
+		"ppt, in avcodec_encode_video2, avctx->internal->frame_thread_encoder, avctx->active_thread_type: %d, %d.\n", 
+		avctx->internal->frame_thread_encoder, avctx->active_thread_type);
     if(CONFIG_FRAME_THREAD_ENCODER &&
-       avctx->internal->frame_thread_encoder && (avctx->active_thread_type&FF_THREAD_FRAME))
+       avctx->internal->frame_thread_encoder && (avctx->active_thread_type&FF_THREAD_FRAME)){
+       av_log(NULL, AV_LOG_INFO, 
+		"ppt, in avcodec_encode_video2, go to ff_thread_video_encode_frame.\n");
         return ff_thread_video_encode_frame(avctx, avpkt, frame, got_packet_ptr);
-
+    }
     if ((avctx->flags&AV_CODEC_FLAG_PASS1) && avctx->stats_out)
         avctx->stats_out[0] = '\0';
 

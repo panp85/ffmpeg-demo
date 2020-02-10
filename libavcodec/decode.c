@@ -196,7 +196,7 @@ static int bsfs_init(AVCodecContext *avctx)
         AVBSFContext **tmp;
         const AVBitStreamFilter *filter;
         char *bsf;
-
+		av_log(NULL, AV_LOG_INFO, "ppt, in bsfs_init, bsfs_str: %s.\n", bsfs_str);
         bsf = av_get_token(&bsfs_str, ",");
         if (!bsf) {
             ret = AVERROR(ENOMEM);
@@ -376,9 +376,15 @@ static int decode_simple_internal(AVCodecContext *avctx, AVFrame *frame)
     if (!pkt->data && !avci->draining) {
         av_packet_unref(pkt);
         ret = ff_decode_get_packet(avctx, pkt);
-        if (ret < 0 && ret != AVERROR_EOF)
+        if (ret < 0 && ret != AVERROR_EOF){
+			av_log(NULL, AV_LOG_INFO, "ppt, in decode_simple_internal, ret: %d.\n", ret);
             return ret;
+        }
     }
+	else{
+		av_log(NULL, AV_LOG_INFO, "ppt, in decode_simple_internal, codec: %s, !pkt->data, !avci->draining: %d, %d.\n", 
+			avctx->codec->name, !pkt->data, !avci->draining);
+	}
 
     // Some codecs (at least wma lossless) will crash when feeding drain packets
     // after EOF was signaled.
@@ -394,9 +400,14 @@ static int decode_simple_internal(AVCodecContext *avctx, AVFrame *frame)
 
     if (HAVE_THREADS && avctx->active_thread_type & FF_THREAD_FRAME) {
         ret = ff_thread_decode_frame(avctx, frame, &got_frame, pkt);
+		av_log(NULL, AV_LOG_INFO,
+			"ppt, in decode_simple_internal, codec:%d, %s, ff_thread_decode_frame ret: %d, got_frame: %d.\n",
+			avctx->codec->id, avctx->codec->name, ret, got_frame);
     } else {
+		
         ret = avctx->codec->decode(avctx, frame, &got_frame, pkt);
-
+		av_log(NULL, AV_LOG_INFO,"ppt, in decode_simple_internal, codec:%d, %s, avctx->codec->decode return: %d.\n", 
+					avctx->codec->id, avctx->codec->name, ret);
         if (!(avctx->codec->caps_internal & FF_CODEC_CAP_SETS_PKT_DTS))
             frame->pkt_dts = pkt->dts;
         if (avctx->codec->type == AVMEDIA_TYPE_VIDEO) {
@@ -592,6 +603,7 @@ static int decode_simple_receive_frame(AVCodecContext *avctx, AVFrame *frame)
 
     while (!frame->buf[0]) {
         ret = decode_simple_internal(avctx, frame);
+	av_log(NULL,AV_LOG_INFO, "ppt, in decode_simple_receive_frame, ret: %d.\n", ret);
         if (ret < 0)
             return ret;
     }
@@ -606,11 +618,14 @@ static int decode_receive_frame_internal(AVCodecContext *avctx, AVFrame *frame)
 
     av_assert0(!frame->buf[0]);
 
-    if (avctx->codec->receive_frame)
+    if (avctx->codec->receive_frame){
+		av_log(NULL, AV_LOG_INFO, "ppt, in decode_receive_frame_internal, go to avctx->codec->receive_frame.\n");
         ret = avctx->codec->receive_frame(avctx, frame);
-    else
+    }
+    else{
+		av_log(NULL, AV_LOG_INFO, "ppt, in decode_receive_frame_internal, go to decode_simple_receive_frame.\n");
         ret = decode_simple_receive_frame(avctx, frame);
-
+    }
     if (ret == AVERROR_EOF)
         avci->draining_done = 1;
 
@@ -730,7 +745,7 @@ int attribute_align_arg avcodec_receive_frame(AVCodecContext *avctx, AVFrame *fr
 			avctx->codec_type);
         ret = decode_receive_frame_internal(avctx, frame);
         if (ret < 0){
-			av_log(NULL, AV_LOG_INFO, "ppt, in avcodec_receive_frame, return 1.\n");
+			av_log(NULL, AV_LOG_INFO, "ppt, in avcodec_receive_frame, return %d.\n", ret);
             return ret;
         }
     }
