@@ -3467,7 +3467,7 @@ void ff_rfps_calculate(AVFormatContext *ic)
             && st->info->duration_count > 2
             && fabs(1.0 / (av_q2d(st->r_frame_rate) * av_q2d(st->time_base)) - st->info->rfps_duration_sum / (double)st->info->duration_count) <= 1.0
             ) {
-            av_log(ic, AV_LOG_INFO, "ppt, in ff_rfps_calculate, Setting avg frame rate based on r frame rate\n");
+            av_log(NULL, AV_LOG_INFO, "ppt, in ff_rfps_calculate, Setting avg frame rate based on r frame rate\n");
             st->avg_frame_rate = st->r_frame_rate;
         }
 
@@ -4009,14 +4009,16 @@ FF_ENABLE_DEPRECATION_WARNINGS
             }
         }
     }
-	/*
+	
 	AVFrame *frame = av_frame_alloc();
 	while (1)
 	{
 		int got_picture = 0;
+		
 		ret = avcodec_send_packet(st->internal->avctx, NULL);
 		if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF)
             break;
+        
         ret = avcodec_receive_frame(avctx, frame);
         if (ret >= 0)
             got_picture = 1;
@@ -4025,7 +4027,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 			break;
 		}
 	}
-	*/
+	
     if (flush_codecs) {
         AVPacket empty_pkt = { 0 };
         int err = 0;
